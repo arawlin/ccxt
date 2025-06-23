@@ -1,0 +1,37 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug CLI with OHLCV command",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/cli/ts/cli.ts",
+      "args": ["ohlcv", "binance", "BTC/USDT", "1h"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "envFile": "${workspaceFolder}/.env",
+      "cwd": "${workspaceFolder}/cli",
+      "runtimeArgs": ["--loader", "ts-node/esm"],
+      "env": {
+        "NODE_OPTIONS": "--loader ts-node/esm"
+      }
+    },
+    {
+      "name": "Debug CLI with orderbook command",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/cli/ts/cli.ts",
+      "args": ["orderbook", "binance", "BTC/USDT"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "envFile": "${workspaceFolder}/.env",
+      "cwd": "${workspaceFolder}/cli",
+      "runtimeArgs": ["--loader", "ts-node/esm"],
+      "env": {
+        "NODE_OPTIONS": "--loader ts-node/esm"
+      }
+    }
+  ]
+}
