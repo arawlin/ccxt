@@ -527,6 +527,8 @@ async function loadSettingsAndCreateExchange (
         exchange.origin = exchange.uuid ();
     }
 
+    exchange.httpsProxy = 'http://127.0.0.1:1081';
+
     if (cliOptions.debug) {
         exchange.verbose = true;
     }
