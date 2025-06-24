@@ -32,6 +32,22 @@
       "env": {
         "NODE_OPTIONS": "--loader ts-node/esm"
       }
+    },
+    {
+      "name": "Debug CLI with watchOrderBook command",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/cli/ts/cli.ts",
+      "args": ["binance", "watchOrderBook", "BTC/USDT", "1000"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "envFile": "${workspaceFolder}/.env",
+      "cwd": "${workspaceFolder}/cli",
+      "runtimeArgs": ["--loader", "ts-node/esm"],
+      "env": {
+        "NODE_OPTIONS": "--loader ts-node/esm"
+      }
     }
   ]
 }

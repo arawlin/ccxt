@@ -528,6 +528,8 @@ async function loadSettingsAndCreateExchange (
     }
 
     exchange.httpsProxy = 'http://127.0.0.1:1081';
+    exchange.wssProxy = 'http://127.0.0.1:1081';
+    await exchange.loadProxyModules ();
 
     if (cliOptions.debug) {
         exchange.verbose = true;
