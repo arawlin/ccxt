@@ -53,6 +53,14 @@ function _interopNamespace(e) {
 // ----------------------------------------------------------------------------
 const { isNode, selfIsDefined, deepExtend, extend, clone, flatten, unique, indexBy, sortBy, sortBy2, safeFloat2, groupBy, aggregate, uuid, unCamelCase, precisionFromString, Throttler, capitalize, now, decimalToPrecision, safeValue, safeValue2, safeString, safeString2, seconds, milliseconds, binaryToBase16, numberToBE, base16ToBinary, iso8601, omit, isJsonEncodedObject, safeInteger, sum, omitZero, implodeParams, extractParams, json, merge, binaryConcat, hash, ecdsa, arrayConcat, encode, urlencode, hmac, numberToString, roundTimeframe, parseTimeframe, safeInteger2, safeStringLower, parse8601, yyyymmdd, safeStringUpper, safeTimestamp, binaryConcatArray, uuidv1, numberToLE, ymdhms, stringToBase64, decode, uuid22, safeIntegerProduct2, safeIntegerProduct, safeStringLower2, yymmdd, base58ToBinary, binaryToBase58, safeTimestamp2, rawencode, keysort, sort, inArray, isEmpty, ordered, filterBy, uuid16, safeFloat, base64ToBinary, safeStringUpper2, urlencodeWithArrayRepeat, microseconds, binaryToBase64, strip, toArray, safeFloatN, safeIntegerN, safeIntegerProductN, safeTimestampN, safeValueN, safeStringN, safeStringLowerN, safeStringUpperN, urlencodeNested, urlencodeBase64, parseDate, ymd, base64ToString, crc32, packb, TRUNCATE, ROUND, DECIMAL_PLACES, NO_PADDING, TICK_SIZE, SIGNIFICANT_DIGITS, sleep } = functions;
 // ----------------------------------------------------------------------------
+let protobufMexc = undefined;
+(async () => {
+    try {
+        protobufMexc = await Promise.resolve().then(function () { return require('../protobuf/mexc/compiled.cjs.js'); });
+    }
+    catch { }
+})();
+//-----------------------------------------------------------------------------
 /**
  * @class Exchange
  */
@@ -74,6 +82,7 @@ class Exchange {
             'chrome100': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36',
         };
         this.headers = {};
+        this.returnResponseHeaders = false;
         this.origin = '*'; // CORS origin
         this.MAX_VALUE = Number.MAX_VALUE;
         //
@@ -551,6 +560,37 @@ class Exchange {
         }
         return undefined;
     }
+    isBinaryMessage(msg) {
+        return msg instanceof Uint8Array;
+    }
+    decodeProtoMsg(data) {
+        if (!protobufMexc) {
+            throw new errors.NotSupported(this.id + ' requires protobuf to decode messages, please install it with `npm install protobufjs`');
+        }
+        if (data instanceof Uint8Array) {
+            const decoded = protobufMexc.default.PushDataV3ApiWrapper.decode(data);
+            const dict = decoded.toJSON();
+            //  {
+            //    "channel":"spot@public.kline.v3.api.pb@BTCUSDT@Min1",
+            //    "symbol":"BTCUSDT",
+            //    "symbolId":"2fb942154ef44a4ab2ef98c8afb6a4a7",
+            //    "createTime":"1754737941062",
+            //    "publicSpotKline":{
+            //       "interval":"Min1",
+            //       "windowStart":"1754737920",
+            //       "openingPrice":"117317.31",
+            //       "closingPrice":"117325.26",
+            //       "highestPrice":"117341",
+            //       "lowestPrice":"117317.3",
+            //       "volume":"3.12599854",
+            //       "amount":"366804.43",
+            //       "windowEnd":"1754737980"
+            //    }
+            // }
+            return dict;
+        }
+        return data;
+    }
     async fetch(url, method = 'GET', headers = undefined, body = undefined) {
         // load node-http(s) modules only on first call
         if (isNode) {
@@ -726,6 +766,9 @@ class Exchange {
             if (!skipFurtherErrorHandling) {
                 this.handleHttpStatusCode(response.status, response.statusText, url, method, responseBody);
             }
+            if (json && !Array.isArray(json) && this.returnResponseHeaders) {
+                json['responseHeaders'] = responseHeaders;
+            }
             return json || responseBody;
         });
     }
@@ -859,6 +902,12 @@ class Exchange {
             return hexData;
         }
     }
+    mapToSafeMap(dict) {
+        return dict; // wrapper for go
+    }
+    safeMapToMap(dict) {
+        return dict; // wrapper for go
+    }
     spawn(method, ...args) {
         const future = Future.Future();
         // using setTimeout 0 to force the execution to run after the future is returned
@@ -913,9 +962,10 @@ class Exchange {
                 // add support for proxies
                 'options': {
                     'agent': finalAgent,
-                }
+                },
+                'decompressBinary': this.safeBool(this.options, 'decompressBinary', true),
             }, wsOptions);
-            this.clients[url] = new WsClient(url, onMessage, onError, onClose, onConnected, options);
+            this.clients[url] = new WsClient["default"](url, onMessage, onError, onClose, onConnected, options);
         }
         return this.clients[url];
     }
@@ -1110,8 +1160,15 @@ class Exchange {
         }
     }
     async close() {
+        // test by running ts/src/pro/test/base/test.close.ts
+        await this.sleep(0); // allow other futures to run
         const clients = Object.values(this.clients || {});
         const closedClients = [];
+        for (let i = 0; i < clients.length; i++) {
+            const client = clients[i];
+            client.error = new errors.ExchangeClosedByUser(this.id + ' closedByUser');
+            closedClients.push(client.close());
+        }
         for (let i = 0; i < clients.length; i++) {
             const client = clients[i];
             delete this.clients[client.url];
@@ -1143,6 +1200,7 @@ class Exchange {
             }
             client.reject(new errors.ExchangeError(this.id + ' nonce is behind the cache after ' + maxRetries.toString() + ' tries.'), messageHash);
             delete this.clients[client.url];
+            this.orderbooks[symbol] = this.orderBook(); // clear the orderbook and its cache - issue https://github.com/ccxt/ccxt/issues/26753
         }
         catch (e) {
             client.reject(e, messageHash);
@@ -1572,6 +1630,17 @@ class Exchange {
                 'watchLiquidations': undefined,
                 'watchLiquidationsForSymbols': undefined,
                 'watchMyLiquidations': undefined,
+                'unWatchOrders': undefined,
+                'unWatchTrades': undefined,
+                'unWatchTradesForSymbols': undefined,
+                'unWatchOHLCVForSymbols': undefined,
+                'unWatchOrderBookForSymbols': undefined,
+                'unWatchPositions': undefined,
+                'unWatchOrderBook': undefined,
+                'unWatchTickers': undefined,
+                'unWatchMyTrades': undefined,
+                'unWatchTicker': undefined,
+                'unWatchOHLCV': undefined,
                 'watchMyLiquidationsForSymbols': undefined,
                 'withdraw': undefined,
                 'ws': undefined,
@@ -1779,6 +1848,13 @@ class Exchange {
     getCacheIndex(orderbook, deltas) {
         // return the first index of the cache that can be applied to the orderbook or -1 if not possible
         return -1;
+    }
+    arraysConcat(arraysOfArrays) {
+        let result = [];
+        for (let i = 0; i < arraysOfArrays.length; i++) {
+            result = this.arrayConcat(result, arraysOfArrays[i]);
+        }
+        return result;
     }
     findTimeframe(timeframe, timeframes = undefined) {
         if (timeframes === undefined) {
@@ -2133,6 +2209,12 @@ class Exchange {
     async unWatchOrderBookForSymbols(symbols, params = {}) {
         throw new errors.NotSupported(this.id + ' unWatchOrderBookForSymbols() is not supported yet');
     }
+    async unWatchPositions(symbols = undefined, params = {}) {
+        throw new errors.NotSupported(this.id + ' unWatchPositions() is not supported yet');
+    }
+    async unWatchTicker(symbol, params = {}) {
+        throw new errors.NotSupported(this.id + ' unWatchTicker() is not supported yet');
+    }
     async fetchDepositAddresses(codes = undefined, params = {}) {
         throw new errors.NotSupported(this.id + ' fetchDepositAddresses() is not supported yet');
     }
@@ -2368,7 +2450,7 @@ class Exchange {
         // keep this in mind:
         // in JS: 1 == 1.0 is true;  1 === 1.0 is true
         // in Python: 1 == 1.0 is true
-        // in PHP 1 == 1.0 is true, but 1 === 1.0 is false
+        // in PHP 1 == 1.0 is true, but 1 === 1.0 is false.
         if (stringVersion.indexOf('.') >= 0) {
             return parseFloat(stringVersion);
         }
@@ -2817,14 +2899,14 @@ class Exchange {
             }
             values.push(market);
         }
-        this.markets = this.indexBy(values, 'symbol');
+        this.markets = this.mapToSafeMap(this.indexBy(values, 'symbol'));
         const marketsSortedBySymbol = this.keysort(this.markets);
         const marketsSortedById = this.keysort(this.markets_by_id);
         this.symbols = Object.keys(marketsSortedBySymbol);
         this.ids = Object.keys(marketsSortedById);
         if (currencies !== undefined) {
             // currencies is always undefined when called in constructor but not when called from loadMarkets
-            this.currencies = this.deepExtend(this.currencies, currencies);
+            this.currencies = this.mapToSafeMap(this.deepExtend(this.currencies, currencies));
         }
         else {
             let baseCurrencies = [];
@@ -2854,8 +2936,8 @@ class Exchange {
             }
             baseCurrencies = this.sortBy(baseCurrencies, 'code', false, '');
             quoteCurrencies = this.sortBy(quoteCurrencies, 'code', false, '');
-            this.baseCurrencies = this.indexBy(baseCurrencies, 'code');
-            this.quoteCurrencies = this.indexBy(quoteCurrencies, 'code');
+            this.baseCurrencies = this.mapToSafeMap(this.indexBy(baseCurrencies, 'code'));
+            this.quoteCurrencies = this.mapToSafeMap(this.indexBy(quoteCurrencies, 'code'));
             const allCurrencies = this.arrayConcat(baseCurrencies, quoteCurrencies);
             const groupedCurrencies = this.groupBy(allCurrencies, 'code');
             const codes = Object.keys(groupedCurrencies);
@@ -2876,7 +2958,7 @@ class Exchange {
                 resultingCurrencies.push(highestPrecisionCurrency);
             }
             const sortedCurrencies = this.sortBy(resultingCurrencies, 'code');
-            this.currencies = this.deepExtend(this.currencies, this.indexBy(sortedCurrencies, 'code'));
+            this.currencies = this.mapToSafeMap(this.deepExtend(this.currencies, this.indexBy(sortedCurrencies, 'code')));
         }
         this.currencies_by_id = this.indexBySafe(this.currencies, 'id');
         const currenciesSortedByCode = this.keysort(this.currencies);
@@ -3249,19 +3331,7 @@ class Exchange {
         const symbol = (market !== undefined) ? market['symbol'] : undefined;
         return this.filterBySymbolSinceLimit(results, symbol, since, limit);
     }
-    calculateFee(symbol, type, side, amount, price, takerOrMaker = 'taker', params = {}) {
-        /**
-         * @method
-         * @description calculates the presumptive fee that would be charged for an order
-         * @param {string} symbol unified market symbol
-         * @param {string} type 'market' or 'limit'
-         * @param {string} side 'buy' or 'sell'
-         * @param {float} amount how much you want to trade, in units of the base currency on most exchanges, or number of contracts
-         * @param {float} price the price for the order to be filled at, in units of the quote currency
-         * @param {string} takerOrMaker 'taker' or 'maker'
-         * @param {object} params
-         * @returns {object} contains the rate, the percentage multiplied to the order amount to obtain the fee amount, and cost, the total value of the fee in units of the quote currency, for the order
-         */
+    calculateFeeWithRate(symbol, type, side, amount, price, takerOrMaker = 'taker', feeRate = undefined, params = {}) {
         if (type === 'market' && takerOrMaker === 'maker') {
             throw new errors.ArgumentsRequired(this.id + ' calculateFee() - you have provided incompatible arguments - "market" type order can not be "maker". Change either the "type" or the "takerOrMaker" argument to calculate the fee.');
         }
@@ -3298,7 +3368,7 @@ class Exchange {
         if (type === 'market') {
             takerOrMaker = 'taker';
         }
-        const rate = this.safeString(market, takerOrMaker);
+        const rate = (feeRate !== undefined) ? this.numberToString(feeRate) : this.safeString(market, takerOrMaker);
         cost = Precise["default"].stringMul(cost, rate);
         return {
             'type': takerOrMaker,
@@ -3306,6 +3376,21 @@ class Exchange {
             'rate': this.parseNumber(rate),
             'cost': this.parseNumber(cost),
         };
+    }
+    calculateFee(symbol, type, side, amount, price, takerOrMaker = 'taker', params = {}) {
+        /**
+         * @method
+         * @description calculates the presumptive fee that would be charged for an order
+         * @param {string} symbol unified market symbol
+         * @param {string} type 'market' or 'limit'
+         * @param {string} side 'buy' or 'sell'
+         * @param {float} amount how much you want to trade, in units of the base currency on most exchanges, or number of contracts
+         * @param {float} price the price for the order to be filled at, in units of the quote currency
+         * @param {string} takerOrMaker 'taker' or 'maker'
+         * @param {object} params
+         * @returns {object} contains the rate, the percentage multiplied to the order amount to obtain the fee amount, and cost, the total value of the fee in units of the quote currency, for the order
+         */
+        return this.calculateFeeWithRate(symbol, type, side, amount, price, takerOrMaker, undefined, params);
     }
     safeLiquidation(liquidation, market = undefined) {
         const contracts = this.safeString(liquidation, 'contracts');
@@ -3350,6 +3435,26 @@ class Exchange {
         trade['price'] = this.parseNumber(price);
         trade['cost'] = this.parseNumber(cost);
         return trade;
+    }
+    createCcxtTradeId(timestamp = undefined, side = undefined, amount = undefined, price = undefined, takerOrMaker = undefined) {
+        // this approach is being used by multiple exchanges (mexc, woo, coinsbit, dydx, ...)
+        let id = undefined;
+        if (timestamp !== undefined) {
+            id = this.numberToString(timestamp);
+            if (side !== undefined) {
+                id += '-' + side;
+            }
+            if (amount !== undefined) {
+                id += '-' + this.numberToString(amount);
+            }
+            if (price !== undefined) {
+                id += '-' + this.numberToString(price);
+            }
+            if (takerOrMaker !== undefined) {
+                id += '-' + takerOrMaker;
+            }
+        }
+        return id;
     }
     parsedFeeAndFees(container) {
         let fee = this.safeDict(container, 'fee');
@@ -3472,7 +3577,7 @@ class Exchange {
         for (let i = 0; i < fees.length; i++) {
             const fee = fees[i];
             const code = this.safeString(fee, 'currency');
-            const feeCurrencyCode = code !== undefined ? code : i.toString();
+            const feeCurrencyCode = (code !== undefined) ? code : i.toString();
             if (feeCurrencyCode !== undefined) {
                 const rate = this.safeString(fee, 'rate');
                 const cost = this.safeString(fee, 'cost');
@@ -3508,8 +3613,7 @@ class Exchange {
     }
     safeTicker(ticker, market = undefined) {
         let open = this.omitZero(this.safeString(ticker, 'open'));
-        let close = this.omitZero(this.safeString(ticker, 'close'));
-        let last = this.omitZero(this.safeString(ticker, 'last'));
+        let close = this.omitZero(this.safeString2(ticker, 'close', 'last'));
         let change = this.omitZero(this.safeString(ticker, 'change'));
         let percentage = this.omitZero(this.safeString(ticker, 'percentage'));
         let average = this.omitZero(this.safeString(ticker, 'average'));
@@ -3519,17 +3623,55 @@ class Exchange {
         if (vwap === undefined) {
             vwap = Precise["default"].stringDiv(this.omitZero(quoteVolume), baseVolume);
         }
-        if ((last !== undefined) && (close === undefined)) {
-            close = last;
-        }
-        else if ((last === undefined) && (close !== undefined)) {
-            last = close;
-        }
-        if ((last !== undefined) && (open !== undefined)) {
-            if (change === undefined) {
-                change = Precise["default"].stringSub(last, open);
+        // calculate open
+        if (change !== undefined) {
+            if (close === undefined && average !== undefined) {
+                close = Precise["default"].stringAdd(average, Precise["default"].stringDiv(change, '2'));
             }
-            if (average === undefined) {
+            if (open === undefined && close !== undefined) {
+                open = Precise["default"].stringSub(close, change);
+            }
+        }
+        else if (percentage !== undefined) {
+            if (close === undefined && average !== undefined) {
+                const openAddClose = Precise["default"].stringMul(average, '2');
+                // openAddClose = open * (1 + (100 + percentage)/100)
+                const denominator = Precise["default"].stringAdd('2', Precise["default"].stringDiv(percentage, '100'));
+                const calcOpen = (open !== undefined) ? open : Precise["default"].stringDiv(openAddClose, denominator);
+                close = Precise["default"].stringMul(calcOpen, Precise["default"].stringAdd('1', Precise["default"].stringDiv(percentage, '100')));
+            }
+            if (open === undefined && close !== undefined) {
+                open = Precise["default"].stringDiv(close, Precise["default"].stringAdd('1', Precise["default"].stringDiv(percentage, '100')));
+            }
+        }
+        // change
+        if (change === undefined) {
+            if (close !== undefined && open !== undefined) {
+                change = Precise["default"].stringSub(close, open);
+            }
+            else if (close !== undefined && percentage !== undefined) {
+                change = Precise["default"].stringMul(Precise["default"].stringDiv(percentage, '100'), Precise["default"].stringDiv(close, '100'));
+            }
+            else if (open !== undefined && percentage !== undefined) {
+                change = Precise["default"].stringMul(open, Precise["default"].stringDiv(percentage, '100'));
+            }
+        }
+        // calculate things according to "open" (similar can be done with "close")
+        if (open !== undefined) {
+            // percentage (using change)
+            if (percentage === undefined && change !== undefined) {
+                percentage = Precise["default"].stringMul(Precise["default"].stringDiv(change, open), '100');
+            }
+            // close (using change)
+            if (close === undefined && change !== undefined) {
+                close = Precise["default"].stringAdd(open, change);
+            }
+            // close (using average)
+            if (close === undefined && average !== undefined) {
+                close = Precise["default"].stringMul(average, '2');
+            }
+            // average
+            if (average === undefined && close !== undefined) {
                 let precision = 18;
                 if (market !== undefined && this.isTickPrecision()) {
                     const marketPrecision = this.safeDict(market, 'precision');
@@ -3538,20 +3680,12 @@ class Exchange {
                         precision = this.precisionFromString(precisionPrice);
                     }
                 }
-                average = Precise["default"].stringDiv(Precise["default"].stringAdd(last, open), '2', precision);
+                average = Precise["default"].stringDiv(Precise["default"].stringAdd(open, close), '2', precision);
             }
-        }
-        if ((percentage === undefined) && (change !== undefined) && (open !== undefined) && Precise["default"].stringGt(open, '0')) {
-            percentage = Precise["default"].stringMul(Precise["default"].stringDiv(change, open), '100');
-        }
-        if ((change === undefined) && (percentage !== undefined) && (open !== undefined)) {
-            change = Precise["default"].stringDiv(Precise["default"].stringMul(percentage, open), '100');
-        }
-        if ((open === undefined) && (last !== undefined) && (change !== undefined)) {
-            open = Precise["default"].stringSub(last, change);
         }
         // timestamp and symbol operations don't belong in safeTicker
         // they should be done in the derived classes
+        const closeParsed = this.parseNumber(this.omitZero(close));
         return this.extend(ticker, {
             'bid': this.parseNumber(this.omitZero(this.safeString(ticker, 'bid'))),
             'bidVolume': this.safeNumber(ticker, 'bidVolume'),
@@ -3560,8 +3694,8 @@ class Exchange {
             'high': this.parseNumber(this.omitZero(this.safeString(ticker, 'high'))),
             'low': this.parseNumber(this.omitZero(this.safeString(ticker, 'low'))),
             'open': this.parseNumber(this.omitZero(open)),
-            'close': this.parseNumber(this.omitZero(close)),
-            'last': this.parseNumber(this.omitZero(last)),
+            'close': closeParsed,
+            'last': closeParsed,
             'change': this.parseNumber(change),
             'percentage': this.parseNumber(percentage),
             'average': this.parseNumber(average),
@@ -4016,7 +4150,7 @@ class Exchange {
         return this.filterBySinceLimit(sorted, since, limit, 0, tail);
     }
     parseLeverageTiers(response, symbols = undefined, marketIdKey = undefined) {
-        // marketIdKey should only be undefined when response is a dictionary
+        // marketIdKey should only be undefined when response is a dictionary.
         symbols = this.marketSymbols(symbols);
         const tiers = {};
         let symbolsLength = 0;
@@ -4569,6 +4703,12 @@ class Exchange {
             return market;
         }
         return result;
+    }
+    marketOrNull(symbol) {
+        if (symbol === undefined) {
+            return undefined;
+        }
+        return this.market(symbol);
     }
     checkRequiredCredentials(error = true) {
         /**
@@ -5454,6 +5594,9 @@ class Exchange {
     async fetchGreeks(symbol, params = {}) {
         throw new errors.NotSupported(this.id + ' fetchGreeks() is not supported yet');
     }
+    async fetchAllGreeks(symbols = undefined, params = {}) {
+        throw new errors.NotSupported(this.id + ' fetchAllGreeks() is not supported yet');
+    }
     async fetchOptionChain(code, params = {}) {
         throw new errors.NotSupported(this.id + ' fetchOptionChain() is not supported yet');
     }
@@ -5476,10 +5619,10 @@ class Exchange {
          */
         throw new errors.NotSupported(this.id + ' fetchDepositsWithdrawals() is not supported yet');
     }
-    async fetchDeposits(symbol = undefined, since = undefined, limit = undefined, params = {}) {
+    async fetchDeposits(code = undefined, since = undefined, limit = undefined, params = {}) {
         throw new errors.NotSupported(this.id + ' fetchDeposits() is not supported yet');
     }
-    async fetchWithdrawals(symbol = undefined, since = undefined, limit = undefined, params = {}) {
+    async fetchWithdrawals(code = undefined, since = undefined, limit = undefined, params = {}) {
         throw new errors.NotSupported(this.id + ' fetchWithdrawals() is not supported yet');
     }
     async fetchDepositsWs(code = undefined, since = undefined, limit = undefined, params = {}) {
@@ -5748,11 +5891,20 @@ class Exchange {
         if (precisionNumber === 0) {
             return '1';
         }
-        let parsedPrecision = '0.';
-        for (let i = 0; i < precisionNumber - 1; i++) {
-            parsedPrecision = parsedPrecision + '0';
+        if (precisionNumber > 0) {
+            let parsedPrecision = '0.';
+            for (let i = 0; i < precisionNumber - 1; i++) {
+                parsedPrecision = parsedPrecision + '0';
+            }
+            return parsedPrecision + '1';
         }
-        return parsedPrecision + '1';
+        else {
+            let parsedPrecision = '1';
+            for (let i = 0; i < precisionNumber * -1 - 1; i++) {
+                parsedPrecision = parsedPrecision + '0';
+            }
+            return parsedPrecision + '0';
+        }
     }
     integerPrecisionToAmount(precision) {
         /**
@@ -6554,7 +6706,7 @@ class Exchange {
         let calls = 0;
         let result = [];
         let errors$1 = 0;
-        const until = this.safeInteger2(params, 'untill', 'till'); // do not omit it from params here
+        const until = this.safeIntegerN(params, ['until', 'untill', 'till']); // do not omit it from params here
         [maxEntriesPerRequest, params] = this.handleMaxEntriesPerRequestAndParams(method, maxEntriesPerRequest, params);
         if ((paginationDirection === 'forward')) {
             if (since === undefined) {
@@ -6909,6 +7061,31 @@ class Exchange {
     parseGreeks(greeks, market = undefined) {
         throw new errors.NotSupported(this.id + ' parseGreeks () is not supported yet');
     }
+    parseAllGreeks(greeks, symbols = undefined, params = {}) {
+        //
+        // the value of greeks is either a dict or a list
+        //
+        const results = [];
+        if (Array.isArray(greeks)) {
+            for (let i = 0; i < greeks.length; i++) {
+                const parsedTicker = this.parseGreeks(greeks[i]);
+                const greek = this.extend(parsedTicker, params);
+                results.push(greek);
+            }
+        }
+        else {
+            const marketIds = Object.keys(greeks);
+            for (let i = 0; i < marketIds.length; i++) {
+                const marketId = marketIds[i];
+                const market = this.safeMarket(marketId);
+                const parsed = this.parseGreeks(greeks[marketId], market);
+                const greek = this.extend(parsed, params);
+                results.push(greek);
+            }
+        }
+        symbols = this.marketSymbols(symbols);
+        return this.filterByArray(results, 'symbol', symbols);
+    }
     parseOption(chain, currency = undefined, market = undefined) {
         throw new errors.NotSupported(this.id + ' parseOption () is not supported yet');
     }
@@ -7147,16 +7324,35 @@ class Exchange {
          */
         throw new errors.NotSupported(this.id + ' fetchTransfers () is not supported yet');
     }
-    cleanUnsubscription(client, subHash, unsubHash) {
+    cleanUnsubscription(client, subHash, unsubHash, subHashIsPrefix = false) {
         if (unsubHash in client.subscriptions) {
             delete client.subscriptions[unsubHash];
         }
-        if (subHash in client.subscriptions) {
-            delete client.subscriptions[subHash];
+        if (!subHashIsPrefix) {
+            if (subHash in client.subscriptions) {
+                delete client.subscriptions[subHash];
+            }
+            if (subHash in client.futures) {
+                const error = new errors.UnsubscribeError(this.id + ' ' + subHash);
+                client.reject(error, subHash);
+            }
         }
-        if (subHash in client.futures) {
-            const error = new errors.UnsubscribeError(this.id + ' ' + subHash);
-            client.reject(error, subHash);
+        else {
+            const clientSubscriptions = Object.keys(client.subscriptions);
+            for (let i = 0; i < clientSubscriptions.length; i++) {
+                const sub = clientSubscriptions[i];
+                if (sub.startsWith(subHash)) {
+                    delete client.subscriptions[sub];
+                }
+            }
+            const clientFutures = Object.keys(client.futures);
+            for (let i = 0; i < clientFutures.length; i++) {
+                const future = clientFutures[i];
+                if (future.startsWith(subHash)) {
+                    const error = new errors.UnsubscribeError(this.id + ' ' + future);
+                    client.reject(error, future);
+                }
+            }
         }
         client.resolve(true, unsubHash);
     }
@@ -7203,6 +7399,17 @@ class Exchange {
             }
             else if (topic === 'orders' && (this.orders !== undefined)) {
                 this.orders = undefined;
+            }
+            else if (topic === 'positions' && (this.positions !== undefined)) {
+                this.positions = undefined;
+                const clients = Object.values(this.clients);
+                for (let i = 0; i < clients.length; i++) {
+                    const client = clients[i];
+                    const futures = this.safeDict(client, 'futures');
+                    if ((futures !== undefined) && ('fetchPositionsSnapshot' in futures)) {
+                        delete futures['fetchPositionsSnapshot'];
+                    }
+                }
             }
             else if (topic === 'ticker' && (this.tickers !== undefined)) {
                 const tickerSymbols = Object.keys(this.tickers);

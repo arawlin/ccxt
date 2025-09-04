@@ -4,7 +4,7 @@ package ccxt
 
 
 
-func DynamicallyCreateInstance(exchangeId string, exchangeArgs map[string]interface{}) (IExchange, bool) {
+func DynamicallyCreateInstance(exchangeId string, exchangeArgs map[string]interface{}) (ICoreExchange, bool) {
     switch exchangeId {
     case "Exchange":
         ExchangeItf := &Exchange{}
@@ -222,10 +222,6 @@ func DynamicallyCreateInstance(exchangeId string, exchangeArgs map[string]interf
         digifinexItf := &digifinex{}
         digifinexItf.Init(exchangeArgs)
         return digifinexItf, true
-    case "ellipx":
-        ellipxItf := &ellipx{}
-        ellipxItf.Init(exchangeArgs)
-        return ellipxItf, true
     case "exmo":
         exmoItf := &exmo{}
         exmoItf.Init(exchangeArgs)
@@ -234,6 +230,10 @@ func DynamicallyCreateInstance(exchangeId string, exchangeArgs map[string]interf
         fmfwioItf := &fmfwio{}
         fmfwioItf.Init(exchangeArgs)
         return fmfwioItf, true
+    case "foxbit":
+        foxbitItf := &foxbit{}
+        foxbitItf.Init(exchangeArgs)
+        return foxbitItf, true
     case "gate":
         gateItf := &gate{}
         gateItf.Init(exchangeArgs)
@@ -250,6 +250,10 @@ func DynamicallyCreateInstance(exchangeId string, exchangeArgs map[string]interf
         hashkeyItf := &hashkey{}
         hashkeyItf.Init(exchangeArgs)
         return hashkeyItf, true
+    case "hibachi":
+        hibachiItf := &hibachi{}
+        hibachiItf.Init(exchangeArgs)
+        return hibachiItf, true
     case "hitbtc":
         hitbtcItf := &hitbtc{}
         hitbtcItf.Init(exchangeArgs)
@@ -394,10 +398,6 @@ func DynamicallyCreateInstance(exchangeId string, exchangeArgs map[string]interf
         upbitItf := &upbit{}
         upbitItf.Init(exchangeArgs)
         return upbitItf, true
-    case "vertex":
-        vertexItf := &vertex{}
-        vertexItf.Init(exchangeArgs)
-        return vertexItf, true
     case "wavesexchange":
         wavesexchangeItf := &wavesexchange{}
         wavesexchangeItf.Init(exchangeArgs)

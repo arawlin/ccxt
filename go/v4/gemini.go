@@ -8,10 +8,10 @@ type gemini struct {
 
 }
 
-func NewGeminiCore() gemini {
-   p := gemini{}
-   setDefaults(&p)
-   return p
+func NewGeminiCore() *gemini {
+    p := &gemini{}
+    setDefaults(p)
+    return p
 }
 
 func  (this *gemini) Describe() interface{}  {
@@ -245,7 +245,7 @@ func  (this *gemini) Describe() interface{}  {
             "fetchMarketFromWebRetries": 10,
             "fetchMarketsFromAPI": map[string]interface{} {
                 "fetchDetailsForAllSymbols": false,
-                "quoteCurrencies": []interface{}{"USDT", "GUSD", "USD", "DAI", "EUR", "GBP", "SGD", "BTC", "ETH", "LTC", "BCH", "SOL"},
+                "quoteCurrencies": []interface{}{"USDT", "GUSD", "USD", "DAI", "EUR", "GBP", "SGD", "BTC", "ETH", "LTC", "BCH", "SOL", "USDC"},
             },
             "fetchMarkets": map[string]interface{} {
                 "webApiEnable": true,
@@ -497,8 +497,8 @@ func  (this *gemini) FetchMarkets(optionalArgs ...interface{}) <- chan interface
             var method interface{} = this.SafeValue(this.Options, "fetchMarketsMethod", "fetch_markets_from_api")
             if IsTrue(IsEqual(method, "fetch_markets_from_web")) {
                 var promises interface{} = []interface{}{}
-                AppendToArray(&promises,this.FetchMarketsFromWeb(params)) // get usd markets
-                AppendToArray(&promises,this.FetchUSDTMarkets(params)) // get usdt markets
+                AppendToArray(&promises, this.FetchMarketsFromWeb(params)) // get usd markets
+                AppendToArray(&promises, this.FetchUSDTMarkets(params)) // get usdt markets
         
                 promisesResult:= (<-promiseAll(promises))
                 PanicOnError(promisesResult)
@@ -568,7 +568,7 @@ func  (this *gemini) FetchMarketsFromWeb(optionalArgs ...interface{}) <- chan in
                 var baseId interface{} = this.SafeStringLower(amountPrecisionParts, 1, Replace(marketId, quoteId, ""))
                 var base interface{} = this.SafeCurrencyCode(baseId)
                 var quote interface{} = this.SafeCurrencyCode(quoteId)
-                AppendToArray(&result,map[string]interface{} {
+                AppendToArray(&result, map[string]interface{} {
                     "id": marketId,
                     "symbol": Add(Add(base, "/"), quote),
                     "base": base,
@@ -663,7 +663,7 @@ func  (this *gemini) FetchUSDTMarkets(optionalArgs ...interface{}) <- chan inter
         
                 rawResponse:= (<-this.PublicGetV1SymbolsDetailsSymbol(this.Extend(request, params)))
                 PanicOnError(rawResponse)
-                AppendToArray(&result,this.ParseMarket(rawResponse))
+                AppendToArray(&result, this.ParseMarket(rawResponse))
             }
         
             ch <- result
@@ -695,7 +695,7 @@ func  (this *gemini) FetchMarketsFromAPI(optionalArgs ...interface{}) <- chan in
             var marketIds interface{} = []interface{}{}
             for i := 0; IsLessThan(i, GetArrayLength(marketIdsRaw)); i++ {
                 if IsTrue(!IsEqual(GetValue(marketIdsRaw, i), bugSymbol)) {
-                    AppendToArray(&marketIds,GetValue(marketIdsRaw, i))
+                    AppendToArray(&marketIds, GetValue(marketIdsRaw, i))
                 }
             }
             if IsTrue(this.SafeBool(options, "fetchDetailsForAllSymbols", false)) {
@@ -705,13 +705,13 @@ func  (this *gemini) FetchMarketsFromAPI(optionalArgs ...interface{}) <- chan in
                     var request interface{} = map[string]interface{} {
                         "symbol": marketId,
                     }
-                    AppendToArray(&promises,this.PublicGetV1SymbolsDetailsSymbol(this.Extend(request, params)))
+                    AppendToArray(&promises, this.PublicGetV1SymbolsDetailsSymbol(this.Extend(request, params)))
                 }
         
                 responses:= (<-promiseAll(promises))
                 PanicOnError(responses)
                 for i := 0; IsLessThan(i, GetArrayLength(responses)); i++ {
-                    AppendToArray(&result,this.ParseMarket(GetValue(responses, i)))
+                    AppendToArray(&result, this.ParseMarket(GetValue(responses, i)))
                 }
             } else {
                 // use trading-pairs info, if it was fetched
@@ -722,12 +722,12 @@ func  (this *gemini) FetchMarketsFromAPI(optionalArgs ...interface{}) <- chan in
                         var marketId interface{} = GetValue(marketIds, i)
                         var tradingPair interface{} = this.SafeList(indexedTradingPairs, ToUpper(marketId))
                         if IsTrue(!IsEqual(tradingPair, nil)) {
-                            AppendToArray(&result,this.ParseMarket(tradingPair))
+                            AppendToArray(&result, this.ParseMarket(tradingPair))
                         }
                     }
                 } else {
                     for i := 0; IsLessThan(i, GetArrayLength(marketIds)); i++ {
-                        AppendToArray(&result,this.ParseMarket(GetValue(marketIds, i)))
+                        AppendToArray(&result, this.ParseMarket(GetValue(marketIds, i)))
                     }
                 }
             }
@@ -748,8 +748,8 @@ func  (this *gemini) ParseMarket(response interface{}) interface{}  {
     //
     //     [
     //         'BTCUSD',   // symbol
-    //         2,          // priceTickDecimalPlaces
-    //         8,          // quantityTickDecimalPlaces
+    //         2,          // tick precision (priceTickDecimalPlaces)
+    //         8,          // amount precision (quantityTickDecimalPlaces)
     //         '0.00001',  // quantityMinimum
     //         10,         // quantityRoundDecimalPlaces
     //         true        // minimumsAreInclusive
@@ -768,7 +768,7 @@ func  (this *gemini) ParseMarket(response interface{}) interface{}  {
     //         "wrap_enabled": false
     //         "product_type": "swap", // only in perps
     //         "contract_type": "linear", // only in perps
-    //         "contract_price_currency": "GUSD" // only in perps
+    //         "contract_price_currency": "GUSD"
     //     }
     //
     var marketId interface{} = nil

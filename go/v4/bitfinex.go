@@ -8,10 +8,10 @@ type bitfinex struct {
 
 }
 
-func NewBitfinexCore() bitfinex {
-   p := bitfinex{}
-   setDefaults(&p)
-   return p
+func NewBitfinexCore() *bitfinex {
+    p := &bitfinex{}
+    setDefaults(p)
+    return p
 }
 
 func  (this *bitfinex) Describe() interface{}  {
@@ -648,7 +648,7 @@ func  (this *bitfinex) FetchMarkets(optionalArgs ...interface{}) <- chan interfa
                 if IsTrue(IsTrue(spot) && IsTrue(this.InArray(id, marginIds))) {
                     margin = true
                 }
-                AppendToArray(&result,map[string]interface{} {
+                AppendToArray(&result, map[string]interface{} {
                     "id": Add("t", id),
                     "symbol": symbol,
                     "base": base,
@@ -830,7 +830,7 @@ func  (this *bitfinex) FetchCurrencies(optionalArgs ...interface{}) <- chan inte
                 var networkName interface{} = this.SafeString(valuesList, 0)
                 // for GOlang transpiler, do with "safe" method
                 var networksList interface{} = this.SafeList(indexedNetworks, networkName, []interface{}{})
-                AppendToArray(&networksList,networkId)
+                AppendToArray(&networksList, networkId)
                 AddElementToObject(indexedNetworks, networkName, networksList)
             }
             var ids interface{} = this.SafeList(response, 0, []interface{}{})
@@ -1191,7 +1191,7 @@ func  (this *bitfinex) FetchOrderBook(symbol interface{}, optionalArgs ...interf
                 var amount interface{} = Precise.StringAbs(signedAmount)
                 var side interface{} = Ternary(IsTrue(Precise.StringGt(signedAmount, "0")), "bids", "asks")
                 var resultSide interface{} = GetValue(result, side)
-                AppendToArray(&resultSide,[]interface{}{price, this.ParseNumber(amount)})
+                AppendToArray(&resultSide, []interface{}{price, this.ParseNumber(amount)})
             }
             AddElementToObject(result, "bids", this.SortBy(GetValue(result, "bids"), 0, true))
             AddElementToObject(result, "asks", this.SortBy(GetValue(result, "asks"), 0))
@@ -1578,7 +1578,7 @@ func  (this *bitfinex) FetchTrades(symbol interface{}, optionalArgs ...interface
             var trades interface{} = this.SortBy(response, 1)
             var tradesList interface{} = []interface{}{}
             for i := 0; IsLessThan(i, GetArrayLength(trades)); i++ {
-                AppendToArray(&tradesList,map[string]interface{} {
+                AppendToArray(&tradesList, map[string]interface{} {
                     "result": GetValue(trades, i),
                 }) // convert to array of dicts to match parseOrder signature
             }
@@ -2016,7 +2016,7 @@ func  (this *bitfinex) CreateOrders(orders interface{}, optionalArgs ...interfac
                 var price interface{} = this.SafeNumber(rawOrder, "price")
                 var orderParams interface{} = this.SafeDict(rawOrder, "params", map[string]interface{} {})
                 var orderRequest interface{} = this.CreateOrderRequest(symbol, typeVar, side, amount, price, orderParams)
-                AppendToArray(&ordersRequests,[]interface{}{"on", orderRequest})
+                AppendToArray(&ordersRequests, []interface{}{"on", orderRequest})
             }
             var request interface{} = map[string]interface{} {
                 "ops": ordersRequests,
@@ -2054,7 +2054,7 @@ func  (this *bitfinex) CreateOrders(orders interface{}, optionalArgs ...interfac
             for i := 0; IsLessThan(i, GetArrayLength(data)); i++ {
                 var entry interface{} = GetValue(data, i)
                 var individualOrder interface{} = GetValue(entry, 4)
-                AppendToArray(&results,map[string]interface{} {
+                AppendToArray(&results, map[string]interface{} {
                     "result": GetValue(individualOrder, 0),
                 })
             }
@@ -2095,7 +2095,7 @@ func  (this *bitfinex) CancelAllOrders(optionalArgs ...interface{}) <- chan inte
             var orders interface{} = this.SafeList(response, 4, []interface{}{})
             var ordersList interface{} = []interface{}{}
             for i := 0; IsLessThan(i, GetArrayLength(orders)); i++ {
-                AppendToArray(&ordersList,map[string]interface{} {
+                AppendToArray(&ordersList, map[string]interface{} {
                     "result": GetValue(orders, i),
                 })
             }
@@ -2251,7 +2251,7 @@ func  (this *bitfinex) CancelOrders(ids interface{}, optionalArgs ...interface{}
             var orders interface{} = this.SafeList(response, 4, []interface{}{})
             var ordersList interface{} = []interface{}{}
             for i := 0; IsLessThan(i, GetArrayLength(orders)); i++ {
-                AppendToArray(&ordersList,map[string]interface{} {
+                AppendToArray(&ordersList, map[string]interface{} {
                     "result": GetValue(orders, i),
                 })
             }
@@ -2369,14 +2369,14 @@ func  (this *bitfinex) FetchOpenOrders(optionalArgs ...interface{}) <- chan inte
             var response interface{} = nil
             if IsTrue(IsEqual(symbol, nil)) {
                 
-        response = (<-this.PrivatePostAuthROrders(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivatePostAuthROrders(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 market = this.Market(symbol)
                 AddElementToObject(request, "symbol", GetValue(market, "id"))
                 
-        response = (<-this.PrivatePostAuthROrdersSymbol(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivatePostAuthROrdersSymbol(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             //
             //      [
@@ -2418,7 +2418,7 @@ func  (this *bitfinex) FetchOpenOrders(optionalArgs ...interface{}) <- chan inte
             //
             var ordersList interface{} = []interface{}{}
             for i := 0; IsLessThan(i, GetArrayLength(response)); i++ {
-                AppendToArray(&ordersList,map[string]interface{} {
+                AppendToArray(&ordersList, map[string]interface{} {
                     "result": GetValue(response, i),
                 })
             }
@@ -2485,14 +2485,14 @@ func  (this *bitfinex) FetchClosedOrders(optionalArgs ...interface{}) <- chan in
             var response interface{} = nil
             if IsTrue(IsEqual(symbol, nil)) {
                 
-        response = (<-this.PrivatePostAuthROrdersHist(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivatePostAuthROrdersHist(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 market = this.Market(symbol)
                 AddElementToObject(request, "symbol", GetValue(market, "id"))
                 
-        response = (<-this.PrivatePostAuthROrdersSymbolHist(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivatePostAuthROrdersSymbolHist(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             //
             //      [
@@ -2534,7 +2534,7 @@ func  (this *bitfinex) FetchClosedOrders(optionalArgs ...interface{}) <- chan in
             //
             var ordersList interface{} = []interface{}{}
             for i := 0; IsLessThan(i, GetArrayLength(response)); i++ {
-                AppendToArray(&ordersList,map[string]interface{} {
+                AppendToArray(&ordersList, map[string]interface{} {
                     "result": GetValue(response, i),
                 })
             }
@@ -2588,7 +2588,7 @@ func  (this *bitfinex) FetchOrderTrades(id interface{}, optionalArgs ...interfac
             PanicOnError(response)
             var tradesList interface{} = []interface{}{}
             for i := 0; IsLessThan(i, GetArrayLength(response)); i++ {
-                AppendToArray(&tradesList,map[string]interface{} {
+                AppendToArray(&tradesList, map[string]interface{} {
                     "result": GetValue(response, i),
                 }) // convert to array of dicts to match parseOrder signature
             }
@@ -2642,16 +2642,16 @@ func  (this *bitfinex) FetchMyTrades(optionalArgs ...interface{}) <- chan interf
                 market = this.Market(symbol)
                 AddElementToObject(request, "symbol", GetValue(market, "id"))
                 
-        response = (<-this.PrivatePostAuthRTradesSymbolHist(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivatePostAuthRTradesSymbolHist(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 
-        response = (<-this.PrivatePostAuthRTradesHist(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivatePostAuthRTradesHist(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             var tradesList interface{} = []interface{}{}
             for i := 0; IsLessThan(i, GetArrayLength(response)); i++ {
-                AppendToArray(&tradesList,map[string]interface{} {
+                AppendToArray(&tradesList, map[string]interface{} {
                     "result": GetValue(response, i),
                 }) // convert to array of dicts to match parseOrder signature
             }
@@ -3094,12 +3094,12 @@ func  (this *bitfinex) FetchDepositsWithdrawals(optionalArgs ...interface{}) <- 
                 currency = this.Currency(code)
                 AddElementToObject(request, "currency", GetValue(currency, "uppercaseId"))
                 
-        response = (<-this.PrivatePostAuthRMovementsCurrencyHist(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivatePostAuthRMovementsCurrencyHist(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 
-        response = (<-this.PrivatePostAuthRMovementsHist(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivatePostAuthRMovementsHist(this.Extend(request, params)))
+                    PanicOnError(response)
             }
         
                 //
@@ -3301,7 +3301,7 @@ func  (this *bitfinex) FetchPositions(optionalArgs ...interface{}) <- chan inter
             //
             var positionsList interface{} = []interface{}{}
             for i := 0; IsLessThan(i, GetArrayLength(response)); i++ {
-                AppendToArray(&positionsList,map[string]interface{} {
+                AppendToArray(&positionsList, map[string]interface{} {
                     "result": GetValue(response, i),
                 })
             }
@@ -3585,12 +3585,12 @@ func  (this *bitfinex) FetchLedger(optionalArgs ...interface{}) <- chan interfac
                 currency = this.Currency(code)
                 AddElementToObject(request, "currency", GetValue(currency, "uppercaseId"))
                 
-        response = (<-this.PrivatePostAuthRLedgersCurrencyHist(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivatePostAuthRLedgersCurrencyHist(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 
-        response = (<-this.PrivatePostAuthRLedgersHist(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivatePostAuthRLedgersHist(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             //
             //     [
@@ -3610,7 +3610,7 @@ func  (this *bitfinex) FetchLedger(optionalArgs ...interface{}) <- chan interfac
             var ledgerObjects interface{} = []interface{}{}
             for i := 0; IsLessThan(i, GetArrayLength(response)); i++ {
                 var item interface{} = GetValue(response, i)
-                AppendToArray(&ledgerObjects,map[string]interface{} {
+                AppendToArray(&ledgerObjects, map[string]interface{} {
                     "result": item,
                 })
             }
@@ -3779,7 +3779,7 @@ func  (this *bitfinex) FetchFundingRateHistory(optionalArgs ...interface{}) <- c
             for i := 0; IsLessThan(i, GetArrayLength(response)); i++ {
                 var fr interface{} = GetValue(response, i)
                 var rate interface{} = this.ParseFundingRateHistory(fr, market)
-                AppendToArray(&rates,rate)
+                AppendToArray(&rates, rate)
             }
             var reversedArray interface{} = []interface{}{}
             var rawRates interface{} = this.FilterBySymbolSinceLimit(rates, symbol, since, limit)
@@ -3787,7 +3787,7 @@ func  (this *bitfinex) FetchFundingRateHistory(optionalArgs ...interface{}) <- c
             for i := 0; IsLessThan(i, ratesLength); i++ {
                 var index interface{} = Subtract(Subtract(ratesLength, i), 1)
                 var valueAtIndex interface{} = GetValue(rawRates, index)
-                AppendToArray(&reversedArray,valueAtIndex)
+                AppendToArray(&reversedArray, valueAtIndex)
             }
         
             ch <- reversedArray
@@ -4310,12 +4310,15 @@ func  (this *bitfinex) ParseLiquidation(liquidation interface{}, optionalArgs ..
     var contractSize interface{} = this.SafeString(market, "contractSize")
     var baseValue interface{} = Precise.StringMul(contracts, contractSize)
     var price interface{} = this.SafeString(entry, 11)
+    var sideFlag interface{} = this.SafeInteger(entry, 8)
+    var side interface{} = Ternary(IsTrue((IsEqual(sideFlag, 1))), "buy", "sell")
     return this.SafeLiquidation(map[string]interface{} {
         "info": entry,
         "symbol": this.SafeSymbol(marketId, market, nil, "contract"),
         "contracts": this.ParseNumber(contracts),
         "contractSize": this.ParseNumber(contractSize),
         "price": this.ParseNumber(price),
+        "side": side,
         "baseValue": this.ParseNumber(baseValue),
         "quoteValue": this.ParseNumber(Precise.StringMul(baseValue, price)),
         "timestamp": timestamp,
@@ -4340,8 +4343,8 @@ func  (this *bitfinex) SetMargin(symbol interface{}, amount interface{}, optiona
                     params := GetArg(optionalArgs, 0, map[string]interface{} {})
             _ = params
         
-            retRes37378 := (<-this.LoadMarkets())
-            PanicOnError(retRes37378)
+            retRes37408 := (<-this.LoadMarkets())
+            PanicOnError(retRes37408)
             var market interface{} = this.Market(symbol)
             if !IsTrue(GetValue(market, "swap")) {
                 panic(NotSupported(Add(this.Id, " setMargin() only support swap markets")))
@@ -4416,8 +4419,8 @@ func  (this *bitfinex) FetchOrder(id interface{}, optionalArgs ...interface{}) <
             params := GetArg(optionalArgs, 1, map[string]interface{} {})
             _ = params
         
-            retRes37968 := (<-this.LoadMarkets())
-            PanicOnError(retRes37968)
+            retRes37998 := (<-this.LoadMarkets())
+            PanicOnError(retRes37998)
             var request interface{} = map[string]interface{} {
                 "id": []interface{}{this.ParseToNumeric(id)},
             }
@@ -4425,14 +4428,14 @@ func  (this *bitfinex) FetchOrder(id interface{}, optionalArgs ...interface{}) <
             var response interface{} = nil
             if IsTrue(IsEqual(symbol, nil)) {
                 
-        response = (<-this.PrivatePostAuthROrders(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivatePostAuthROrders(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 market = this.Market(symbol)
                 AddElementToObject(request, "symbol", GetValue(market, "id"))
                 
-        response = (<-this.PrivatePostAuthROrdersSymbol(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivatePostAuthROrdersSymbol(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             //
             //     [
@@ -4516,8 +4519,8 @@ func  (this *bitfinex) EditOrder(id interface{}, symbol interface{}, typeVar int
             params := GetArg(optionalArgs, 2, map[string]interface{} {})
             _ = params
         
-            retRes38748 := (<-this.LoadMarkets())
-            PanicOnError(retRes38748)
+            retRes38778 := (<-this.LoadMarkets())
+            PanicOnError(retRes38778)
             var market interface{} = this.Market(symbol)
             var request interface{} = map[string]interface{} {
                 "id": this.ParseToNumeric(id),

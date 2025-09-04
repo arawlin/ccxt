@@ -48,6 +48,7 @@ public partial class okx : Exchange
                 { "createTriggerOrder", true },
                 { "editOrder", true },
                 { "fetchAccounts", true },
+                { "fetchAllGreeks", true },
                 { "fetchBalance", true },
                 { "fetchBidsAsks", null },
                 { "fetchBorrowInterest", true },
@@ -694,6 +695,7 @@ public partial class okx : Exchange
                     { "51137", typeof(InvalidOrder) },
                     { "51138", typeof(InvalidOrder) },
                     { "51139", typeof(InvalidOrder) },
+                    { "51155", typeof(RestrictedLocation) },
                     { "51156", typeof(BadRequest) },
                     { "51159", typeof(BadRequest) },
                     { "51162", typeof(InvalidOrder) },
@@ -1049,7 +1051,9 @@ public partial class okx : Exchange
                 } },
                 { "createOrder", "privatePostTradeBatchOrders" },
                 { "createMarketBuyOrderRequiresPrice", false },
-                { "fetchMarkets", new List<object>() {"spot", "future", "swap", "option"} },
+                { "fetchMarkets", new Dictionary<string, object>() {
+                    { "types", new List<object>() {"spot", "future", "swap", "option"} },
+                } },
                 { "timeDifference", 0 },
                 { "adjustForTimeDifference", false },
                 { "defaultType", "spot" },
@@ -1110,7 +1114,7 @@ public partial class okx : Exchange
                     { "FUTURES", "FUTURES" },
                     { "OPTION", "OPTION" },
                 } },
-                { "brokerId", "e847386590ce4dBC" },
+                { "brokerId", "6b9ad766b55dBCDE" },
             } },
             { "features", new Dictionary<string, object>() {
                 { "default", new Dictionary<string, object>() {
@@ -1469,7 +1473,15 @@ public partial class okx : Exchange
         {
             await this.loadTimeDifference();
         }
-        object types = this.safeList(this.options, "fetchMarkets", new List<object>() {});
+        object types = new List<object>() {"spot", "future", "swap", "option"};
+        object fetchMarketsOption = this.safeDict(this.options, "fetchMarkets");
+        if (isTrue(!isEqual(fetchMarketsOption, null)))
+        {
+            types = this.safeList(fetchMarketsOption, "types", types);
+        } else
+        {
+            types = this.safeList(this.options, "fetchMarkets", types); // backward-support
+        }
         object promises = new List<object>() {};
         object result = new List<object>() {};
         for (object i = 0; isLessThan(i, getArrayLength(types)); postFixIncrement(ref i))
@@ -2397,6 +2409,7 @@ public partial class okx : Exchange
      * @see https://www.okx.com/docs-v5/en/#rest-api-market-data-get-mark-price-candlesticks-history
      * @see https://www.okx.com/docs-v5/en/#rest-api-market-data-get-index-candlesticks
      * @see https://www.okx.com/docs-v5/en/#rest-api-market-data-get-index-candlesticks-history
+     * @see https://www.okx.com/docs-v5/en/#order-book-trading-market-data-get-candlesticks-history
      * @param {string} symbol unified symbol of the market to fetch OHLCV data for
      * @param {string} timeframe the length of time each candle represents
      * @param {int} [since] timestamp in ms of the earliest candle to fetch
@@ -2404,6 +2417,7 @@ public partial class okx : Exchange
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.price] "mark" or "index" for mark price and index price candles
      * @param {int} [params.until] timestamp in ms of the latest candle to fetch
+     * @param {string} [params.type] "Candles" or "HistoryCandles", default is "Candles" for recent candles, "HistoryCandles" for older candles
      * @param {boolean} [params.paginate] default false, when true will automatically paginate by calling this endpoint multiple times. See in the docs all the [availble parameters](https://github.com/ccxt/ccxt/wiki/Manual#pagination-params)
      * @returns {int[][]} A list of candles ordered as timestamp, open, high, low, close, volume
      */
@@ -2425,6 +2439,7 @@ public partial class okx : Exchange
         parameters = this.omit(parameters, "price");
         object options = this.safeDict(this.options, "fetchOHLCV", new Dictionary<string, object>() {});
         object timezone = this.safeString(options, "timezone", "UTC");
+        object limitIsUndefined = (isEqual(limit, null));
         if (isTrue(isEqual(limit, null)))
         {
             limit = 100; // default 100, max 100
@@ -2453,7 +2468,8 @@ public partial class okx : Exchange
             if (isTrue(isLessThan(since, historyBorder)))
             {
                 defaultType = "HistoryCandles";
-                limit = mathMin(limit, 100); // max 100 for historical endpoint
+                object maxLimit = ((bool) isTrue((!isEqual(price, null)))) ? 100 : 300;
+                limit = mathMin(limit, maxLimit); // max 300 for historical endpoint
             }
             object startTime = mathMax(subtract(since, 1), 0);
             ((IDictionary<string,object>)request)["before"] = startTime;
@@ -2493,6 +2509,11 @@ public partial class okx : Exchange
         {
             if (isTrue(isHistoryCandles))
             {
+                if (isTrue(isTrue(limitIsUndefined) && isTrue((isEqual(limit, 100)))))
+                {
+                    limit = 300;
+                    ((IDictionary<string,object>)request)["limit"] = 300; // reassign to 300, but this whole logic needs to be simplified...
+                }
                 response = await this.publicGetMarketHistoryCandles(this.extend(request, parameters));
             } else
             {
@@ -2624,13 +2645,13 @@ public partial class okx : Exchange
             // it may be incorrect to use total, free and used for swap accounts
             object eq = this.safeString(balance, "eq");
             object availEq = this.safeString(balance, "availEq");
-            if (isTrue(isTrue((isEqual(eq, null))) || isTrue((isEqual(availEq, null)))))
+            ((IDictionary<string,object>)account)["total"] = eq;
+            if (isTrue(isEqual(availEq, null)))
             {
                 ((IDictionary<string,object>)account)["free"] = this.safeString(balance, "availBal");
                 ((IDictionary<string,object>)account)["used"] = this.safeString(balance, "frozenBal");
             } else
             {
-                ((IDictionary<string,object>)account)["total"] = eq;
                 ((IDictionary<string,object>)account)["free"] = availEq;
             }
             ((IDictionary<string,object>)result)[(string)code] = account;
@@ -2871,8 +2892,8 @@ public partial class okx : Exchange
     /**
      * @method
      * @name okx#createMarketBuyOrderWithCost
-     * @see https://www.okx.com/docs-v5/en/#order-book-trading-trade-post-place-order
      * @description create a market buy order by providing the symbol and cost
+     * @see https://www.okx.com/docs-v5/en/#order-book-trading-trade-post-place-order
      * @param {string} symbol unified symbol of the market to create an order in
      * @param {float} cost how much you want to trade in units of the quote currency
      * @param {object} [params] extra parameters specific to the exchange API endpoint
@@ -2897,8 +2918,8 @@ public partial class okx : Exchange
     /**
      * @method
      * @name okx#createMarketSellOrderWithCost
-     * @see https://www.okx.com/docs-v5/en/#order-book-trading-trade-post-place-order
      * @description create a market buy order by providing the symbol and cost
+     * @see https://www.okx.com/docs-v5/en/#order-book-trading-trade-post-place-order
      * @param {string} symbol unified symbol of the market to create an order in
      * @param {float} cost how much you want to trade in units of the quote currency
      * @param {object} [params] extra parameters specific to the exchange API endpoint
@@ -2947,6 +2968,8 @@ public partial class okx : Exchange
         object takeProfitDefined = (!isEqual(takeProfit, null));
         object trailingPercent = this.safeString2(parameters, "trailingPercent", "callbackRatio");
         object isTrailingPercentOrder = !isEqual(trailingPercent, null);
+        object trailingPrice = this.safeString2(parameters, "trailingPrice", "callbackSpread");
+        object isTrailingPriceOrder = !isEqual(trailingPrice, null);
         object trigger = isTrue((!isEqual(triggerPrice, null))) || isTrue((isEqual(type, "trigger")));
         object isReduceOnly = this.safeValue(parameters, "reduceOnly", false);
         object defaultMarginMode = this.safeString2(this.options, "defaultMarginMode", "marginMode", "cross");
@@ -3089,6 +3112,10 @@ public partial class okx : Exchange
             object convertedTrailingPercent = Precise.stringDiv(trailingPercent, "100");
             ((IDictionary<string,object>)request)["callbackRatio"] = convertedTrailingPercent;
             ((IDictionary<string,object>)request)["ordType"] = "move_order_stop";
+        } else if (isTrue(isTrailingPriceOrder))
+        {
+            ((IDictionary<string,object>)request)["callbackSpread"] = trailingPrice;
+            ((IDictionary<string,object>)request)["ordType"] = "move_order_stop";
         } else if (isTrue(isTrue(stopLossDefined) || isTrue(takeProfitDefined)))
         {
             if (isTrue(stopLossDefined))
@@ -3098,7 +3125,8 @@ public partial class okx : Exchange
                 {
                     throw new InvalidOrder ((string)add(this.id, " createOrder() requires a trigger price in params[\"stopLoss\"][\"triggerPrice\"], or params[\"stopLoss\"][\"stopPrice\"], or params[\"stopLoss\"][\"slTriggerPx\"] for a stop loss order")) ;
                 }
-                ((IDictionary<string,object>)request)["slTriggerPx"] = this.priceToPrecision(symbol, stopLossTriggerPrice);
+                object slTriggerPx = this.priceToPrecision(symbol, stopLossTriggerPrice);
+                ((IDictionary<string,object>)request)["slTriggerPx"] = slTriggerPx;
                 object stopLossLimitPrice = this.safeValueN(stopLoss, new List<object>() {"price", "stopLossPrice", "slOrdPx"});
                 object stopLossOrderType = this.safeString(stopLoss, "type");
                 if (isTrue(!isEqual(stopLossOrderType, null)))
@@ -3202,6 +3230,16 @@ public partial class okx : Exchange
             if (isTrue(twoWayCondition))
             {
                 ((IDictionary<string,object>)request)["ordType"] = "oco";
+            }
+            if (isTrue(isEqual(side, "sell")))
+            {
+                request = this.omit(request, "tgtCcy");
+            }
+            if (isTrue(isEqual(this.safeString(request, "tdMode"), "cash")))
+            {
+                // for some reason tdMode = cash throws
+                // {"code":"1","data":[{"algoClOrdId":"","algoId":"","clOrdId":"","sCode":"51000","sMsg":"Parameter tdMode error ","tag":""}],"msg":""}
+                ((IDictionary<string,object>)request)["tdMode"] = marginMode;
             }
             if (isTrue(!isEqual(takeProfitPrice, null)))
             {
@@ -3583,7 +3621,7 @@ public partial class okx : Exchange
         if (isTrue(isTrue(trigger) || isTrue(trailing)))
         {
             object orderInner = await this.cancelOrders(new List<object>() {id}, symbol, parameters);
-            return this.safeValue(orderInner, 0);
+            return this.safeDict(orderInner, 0);
         }
         await this.loadMarkets();
         object market = this.market(symbol);
@@ -3932,6 +3970,84 @@ public partial class okx : Exchange
         //         "tradeId": "",
         //         "uTime": "1621910749815"
         //     }
+        //
+        // watchOrders & fetchClosedOrders
+        //
+        //    {
+        //        "algoClOrdId": "",
+        //        "algoId": "",
+        //        "attachAlgoClOrdId": "",
+        //        "attachAlgoOrds": [],
+        //        "cancelSource": "",
+        //        "cancelSourceReason": "", // not present in WS, but present in fetchClosedOrders
+        //        "category": "normal",
+        //        "ccy": "", // empty in WS, but eg. `USDT` in fetchClosedOrders
+        //        "clOrdId": "",
+        //        "cTime": "1751705801423",
+        //        "feeCcy": "USDT",
+        //        "instId": "LINK-USDT-SWAP",
+        //        "instType": "SWAP",
+        //        "isTpLimit": "false",
+        //        "lever": "3",
+        //        "linkedAlgoOrd": { "algoId": "" },
+        //        "ordId": "2657625147249614848",
+        //        "ordType": "limit",
+        //        "posSide": "net",
+        //        "px": "13.142",
+        //        "pxType": "",
+        //        "pxUsd": "",
+        //        "pxVol": "",
+        //        "quickMgnType": "",
+        //        "rebate": "0",
+        //        "rebateCcy": "USDT",
+        //        "reduceOnly": "true",
+        //        "side": "sell",
+        //        "slOrdPx": "",
+        //        "slTriggerPx": "",
+        //        "slTriggerPxType": "",
+        //        "source": "",
+        //        "stpId": "",
+        //        "stpMode": "cancel_maker",
+        //        "sz": "0.1",
+        //        "tag": "",
+        //        "tdMode": "isolated",
+        //        "tgtCcy": "",
+        //        "tpOrdPx": "",
+        //        "tpTriggerPx": "",
+        //        "tpTriggerPxType": "",
+        //        "uTime": "1751705807467",
+        //        "reqId": "",                      // field present only in WS
+        //        "msg": "",                        // field present only in WS
+        //        "amendResult": "",                // field present only in WS
+        //        "amendSource": "",                // field present only in WS
+        //        "code": "0",                      // field present only in WS
+        //        "fillFwdPx": "",                  // field present only in WS
+        //        "fillMarkVol": "",                // field present only in WS
+        //        "fillPxUsd": "",                  // field present only in WS
+        //        "fillPxVol": "",                  // field present only in WS
+        //        "lastPx": "13.142",               // field present only in WS
+        //        "notionalUsd": "1.314515408",     // field present only in WS
+        //
+        //     #### these below fields are empty on first omit from websocket, because of "creation" event. however, if order is executed, it also immediately sends another update with these fields filled  ###
+        //
+        //        "pnl": "-0.0001",
+        //        "accFillSz": "0.1",
+        //        "avgPx": "13.142",
+        //        "state": "filled",
+        //        "fee": "-0.00026284",
+        //        "fillPx": "13.142",
+        //        "tradeId": "293429690",
+        //        "fillSz": "0.1",
+        //        "fillTime": "1751705807467",
+        //        "fillNotionalUsd": "1.314515408", // field present only in WS
+        //        "fillPnl": "-0.0001",             // field present only in WS
+        //        "fillFee": "-0.00026284",         // field present only in WS
+        //        "fillFeeCcy": "USDT",             // field present only in WS
+        //        "execType": "M",                  // field present only in WS
+        //        "fillMarkPx": "13.141",           // field present only in WS
+        //        "fillIdxPx": "13.147"             // field present only in WS
+        //    }
+        //
         //
         // Algo Order fetchOpenOrders, fetchCanceledOrders, fetchClosedOrders
         //
@@ -5324,7 +5440,7 @@ public partial class okx : Exchange
         this.checkAddress(address);
         await this.loadMarkets();
         object currency = this.currency(code);
-        if (isTrue(isTrue((!isEqual(tag, null))) && isTrue((isGreaterThan(getArrayLength(tag), 0)))))
+        if (isTrue(isTrue((!isEqual(tag, null))) && isTrue((isGreaterThan(((string)tag).Length, 0)))))
         {
             address = add(add(address, ":"), tag);
         }
@@ -5346,7 +5462,7 @@ public partial class okx : Exchange
         if (isTrue(isEqual(fee, null)))
         {
             object currencies = await this.fetchCurrencies();
-            this.currencies = this.deepExtend(this.currencies, currencies);
+            this.currencies = this.mapToSafeMap(this.deepExtend(this.currencies, currencies));
             object targetNetwork = this.safeDict(getValue(currency, "networks"), this.networkIdToCode(network), new Dictionary<string, object>() {});
             fee = this.safeString(targetNetwork, "fee");
             if (isTrue(isEqual(fee, null)))
@@ -6500,7 +6616,7 @@ public partial class okx : Exchange
             // inject id in implicit api call
             if (isTrue(isTrue(isEqual(method, "POST")) && isTrue((isTrue(isTrue(isEqual(path, "trade/batch-orders")) || isTrue(isEqual(path, "trade/order-algo"))) || isTrue(isEqual(path, "trade/order"))))))
             {
-                object brokerId = this.safeString(this.options, "brokerId", "e847386590ce4dBC");
+                object brokerId = this.safeString(this.options, "brokerId", "6b9ad766b55dBCDE");
                 if (isTrue(((parameters is IList<object>) || (parameters.GetType().IsGenericType && parameters.GetType().GetGenericTypeDefinition().IsAssignableFrom(typeof(List<>))))))
                 {
                     for (object i = 0; isLessThan(i, getArrayLength(parameters)); postFixIncrement(ref i))
@@ -7513,7 +7629,7 @@ public partial class okx : Exchange
     /**
      * @method
      * @name okx#fetchBorrowInterest
-     * @description fetch the interest owed by the user for borrowing currency for margin trading
+     * @description fetch the interest owed b the user for borrowing currency for margin trading
      * @see https://www.okx.com/docs-v5/en/#rest-api-account-get-interest-accrued-data
      * @param {string} code the unified currency code for the currency of the interest
      * @param {string} symbol the market symbol of an isolated margin market, if undefined, the interest for cross margin markets is returned
@@ -8351,6 +8467,93 @@ public partial class okx : Exchange
             }
         }
         return null;
+    }
+
+    /**
+     * @method
+     * @name okx#fetchAllGreeks
+     * @description fetches all option contracts greeks, financial metrics used to measure the factors that affect the price of an options contract
+     * @see https://www.okx.com/docs-v5/en/#public-data-rest-api-get-option-market-data
+     * @param {string[]} [symbols] unified symbols of the markets to fetch greeks for, all markets are returned if not assigned
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @param {string} params.uly Underlying, either uly or instFamily is required
+     * @param {string} params.instFamily Instrument family, either uly or instFamily is required
+     * @returns {object} a [greeks structure]{@link https://docs.ccxt.com/#/?id=greeks-structure}
+     */
+    public async override Task<object> fetchAllGreeks(object symbols = null, object parameters = null)
+    {
+        parameters ??= new Dictionary<string, object>();
+        await this.loadMarkets();
+        object request = new Dictionary<string, object>() {};
+        symbols = this.marketSymbols(symbols, null, true, true, true);
+        object symbolsLength = null;
+        if (isTrue(!isEqual(symbols, null)))
+        {
+            symbolsLength = getArrayLength(symbols);
+        }
+        if (isTrue(isTrue((isEqual(symbols, null))) || isTrue((!isEqual(symbolsLength, 1)))))
+        {
+            object uly = this.safeString(parameters, "uly");
+            if (isTrue(!isEqual(uly, null)))
+            {
+                ((IDictionary<string,object>)request)["uly"] = uly;
+            }
+            object instFamily = this.safeString(parameters, "instFamily");
+            if (isTrue(!isEqual(instFamily, null)))
+            {
+                ((IDictionary<string,object>)request)["instFamily"] = instFamily;
+            }
+            if (isTrue(isTrue((isEqual(uly, null))) && isTrue((isEqual(instFamily, null)))))
+            {
+                throw new BadRequest ((string)add(this.id, " fetchAllGreeks() requires either a uly or instFamily parameter")) ;
+            }
+        }
+        object market = null;
+        if (isTrue(!isEqual(symbols, null)))
+        {
+            if (isTrue(isEqual(symbolsLength, 1)))
+            {
+                market = this.market(getValue(symbols, 0));
+                object marketId = getValue(market, "id");
+                object optionParts = ((string)marketId).Split(new [] {((string)"-")}, StringSplitOptions.None).ToList<object>();
+                ((IDictionary<string,object>)request)["uly"] = getValue(getValue(market, "info"), "uly");
+                ((IDictionary<string,object>)request)["instFamily"] = getValue(getValue(market, "info"), "instFamily");
+                ((IDictionary<string,object>)request)["expTime"] = this.safeString(optionParts, 2);
+            }
+        }
+        parameters = this.omit(parameters, new List<object>() {"uly", "instFamily"});
+        object response = await this.publicGetPublicOptSummary(this.extend(request, parameters));
+        //
+        //     {
+        //         "code": "0",
+        //         "data": [
+        //             {
+        //                 "askVol": "0",
+        //                 "bidVol": "0",
+        //                 "delta": "0.5105464486882039",
+        //                 "deltaBS": "0.7325502184143025",
+        //                 "fwdPx": "37675.80158694987186",
+        //                 "gamma": "-0.13183515090501083",
+        //                 "gammaBS": "0.000024139685826358558",
+        //                 "instId": "BTC-USD-240329-32000-C",
+        //                 "instType": "OPTION",
+        //                 "lever": "4.504428015946619",
+        //                 "markVol": "0.5916253554539876",
+        //                 "realVol": "0",
+        //                 "theta": "-0.0004202992014012855",
+        //                 "thetaBS": "-18.52354631567909",
+        //                 "ts": "1699586421976",
+        //                 "uly": "BTC-USD",
+        //                 "vega": "0.0020207455080045846",
+        //                 "vegaBS": "74.44022302387287",
+        //                 "volLv": "0.5948549730405797"
+        //             },
+        //         ],
+        //         "msg": ""
+        //     }
+        //
+        object data = this.safeList(response, "data", new List<object>() {});
+        return this.parseAllGreeks(data, symbols);
     }
 
     public override object parseGreeks(object greeks, object market = null)

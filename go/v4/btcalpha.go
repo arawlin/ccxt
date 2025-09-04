@@ -8,10 +8,10 @@ type btcalpha struct {
 
 }
 
-func NewBtcalphaCore() btcalpha {
-   p := btcalpha{}
-   setDefaults(&p)
-   return p
+func NewBtcalphaCore() *btcalpha {
+    p := &btcalpha{}
+    setDefaults(p)
+    return p
 }
 
 func  (this *btcalpha) Describe() interface{}  {
@@ -539,7 +539,7 @@ func  (this *btcalpha) ParseBidsAsks(bidasks interface{}, optionalArgs ...interf
     for i := 0; IsLessThan(i, GetArrayLength(bidasks)); i++ {
         var bidask interface{} = GetValue(bidasks, i)
         if IsTrue(bidask) {
-            AppendToArray(&result,this.ParseBidAsk(bidask, priceKey, amountKey))
+            AppendToArray(&result, this.ParseBidAsk(bidask, priceKey, amountKey))
         }
     }
     return result

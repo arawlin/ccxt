@@ -5,7 +5,7 @@ import "github.com/ccxt/ccxt/go/v4"
 // https://github.com/ccxt/ccxt/blob/master/CONTRIBUTING.md#how-to-contribute-code
 
 
-    func TestFetchCurrencies(exchange ccxt.IExchange, skippedProperties interface{}) <- chan interface{} {
+    func TestFetchCurrencies(exchange ccxt.ICoreExchange, skippedProperties interface{}) <- chan interface{} {
                 ch := make(chan interface{})
                 go func() interface{} {
                     defer close(ch)
@@ -16,7 +16,7 @@ import "github.com/ccxt/ccxt/go/v4"
                 PanicOnError(currencies)
                 // todo: try to invent something to avoid undefined undefined, i.e. maybe move into private and force it to have a value
                 var numInactiveCurrencies interface{} = 0
-                var maxInactiveCurrenciesPercentage interface{} = 60 // no more than X% currencies should be inactive
+                var maxInactiveCurrenciesPercentage interface{} = exchange.SafeInteger(skippedProperties, "maxInactiveCurrenciesPercentage", 50) // no more than X% currencies should be inactive
                 var requiredActiveCurrencies interface{} = []interface{}{"BTC", "ETH", "USDT", "USDC"}
                 // todo: remove undefined check
                 if IsTrue(!IsEqual(currencies, nil)) {
@@ -58,7 +58,7 @@ import "github.com/ccxt/ccxt/go/v4"
                 }()
                 return ch
             }
-    func DetectCurrencyConflicts(exchange ccxt.IExchange, currencyValues interface{}) interface{}  {
+    func DetectCurrencyConflicts(exchange ccxt.ICoreExchange, currencyValues interface{}) interface{}  {
         // detect if there are currencies with different ids for the same code
         var ids interface{} = map[string]interface{} {}
         var keys interface{} = ObjectKeys(currencyValues)
