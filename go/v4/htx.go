@@ -8,10 +8,10 @@ type htx struct {
 
 }
 
-func NewHtxCore() htx {
-   p := htx{}
-   setDefaults(&p)
-   return p
+func NewHtxCore() *htx {
+    p := &htx{}
+    setDefaults(p)
+    return p
 }
 
 func  (this *htx) Describe() interface{}  {
@@ -607,7 +607,7 @@ func  (this *htx) Describe() interface{}  {
                         "api/v1/contract_batchorder": 1,
                         "api/v1/contract_cancel": 1,
                         "api/v1/contract_cancelall": 1,
-                        "api/v1/contract_switch_lever_rate": 1,
+                        "api/v1/contract_switch_lever_rate": 30,
                         "api/v1/lightning_close_position": 1,
                         "api/v1/contract_order_info": 1,
                         "api/v1/contract_order_detail": 1,
@@ -663,7 +663,7 @@ func  (this *htx) Describe() interface{}  {
                         "swap-api/v1/swap_cancel": 1,
                         "swap-api/v1/swap_cancelall": 1,
                         "swap-api/v1/swap_lightning_close_position": 1,
-                        "swap-api/v1/swap_switch_lever_rate": 1,
+                        "swap-api/v1/swap_switch_lever_rate": 30,
                         "swap-api/v1/swap_order_info": 1,
                         "swap-api/v1/swap_order_detail": 1,
                         "swap-api/v1/swap_openorders": 1,
@@ -734,8 +734,8 @@ func  (this *htx) Describe() interface{}  {
                         "linear-swap-api/v1/swap_cross_cancel": 1,
                         "linear-swap-api/v1/swap_cancelall": 1,
                         "linear-swap-api/v1/swap_cross_cancelall": 1,
-                        "linear-swap-api/v1/swap_switch_lever_rate": 1,
-                        "linear-swap-api/v1/swap_cross_switch_lever_rate": 1,
+                        "linear-swap-api/v1/swap_switch_lever_rate": 30,
+                        "linear-swap-api/v1/swap_cross_switch_lever_rate": 30,
                         "linear-swap-api/v1/swap_lightning_close_position": 1,
                         "linear-swap-api/v1/swap_cross_lightning_close_position": 1,
                         "linear-swap-api/v1/swap_order_info": 1,
@@ -1311,32 +1311,32 @@ func  (this *htx) FetchStatus(optionalArgs ...interface{}) <- chan interface{} {
                 if IsTrue(IsEqual(marketType, "swap")) {
                     if IsTrue(IsEqual(subType, "linear")) {
                         
-        response = (<-this.StatusPublicSwapLinearGetApiV2SummaryJson())
-                        PanicOnError(response)
+            response = (<-this.StatusPublicSwapLinearGetApiV2SummaryJson())
+                            PanicOnError(response)
                     } else if IsTrue(IsEqual(subType, "inverse")) {
                         
-        response = (<-this.StatusPublicSwapInverseGetApiV2SummaryJson())
-                        PanicOnError(response)
+            response = (<-this.StatusPublicSwapInverseGetApiV2SummaryJson())
+                            PanicOnError(response)
                     }
                 } else if IsTrue(IsEqual(marketType, "future")) {
                     if IsTrue(IsEqual(subType, "linear")) {
                         
-        response = (<-this.StatusPublicFutureLinearGetApiV2SummaryJson())
-                        PanicOnError(response)
+            response = (<-this.StatusPublicFutureLinearGetApiV2SummaryJson())
+                            PanicOnError(response)
                     } else if IsTrue(IsEqual(subType, "inverse")) {
                         
-        response = (<-this.StatusPublicFutureInverseGetApiV2SummaryJson())
-                        PanicOnError(response)
+            response = (<-this.StatusPublicFutureInverseGetApiV2SummaryJson())
+                            PanicOnError(response)
                     }
                 } else if IsTrue(IsEqual(marketType, "contract")) {
                     
-        response = (<-this.ContractPublicGetHeartbeat())
-                    PanicOnError(response)
+            response = (<-this.ContractPublicGetHeartbeat())
+                        PanicOnError(response)
                 }
             } else if IsTrue(IsEqual(marketType, "spot")) {
                 
-        response = (<-this.StatusPublicSpotGetApiV2SummaryJson())
-                PanicOnError(response)
+            response = (<-this.StatusPublicSpotGetApiV2SummaryJson())
+                    PanicOnError(response)
             }
             //
             // statusPublicSpotGetApiV2SummaryJson, statusPublicSwapInverseGetApiV2SummaryJson, statusPublicFutureLinearGetApiV2SummaryJson, statusPublicFutureInverseGetApiV2SummaryJson
@@ -1555,12 +1555,12 @@ func  (this *htx) FetchTime(optionalArgs ...interface{}) <- chan interface{} {
             var response interface{} = nil
             if IsTrue(IsTrue((IsEqual(typeVar, "future"))) || IsTrue((IsEqual(typeVar, "swap")))) {
                 
-        response = (<-this.ContractPublicGetApiV1Timestamp(params))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetApiV1Timestamp(params))
+                    PanicOnError(response)
             } else {
                 
-        response = (<-this.SpotPublicGetV1CommonTimestamp(params))
-                PanicOnError(response)
+            response = (<-this.SpotPublicGetV1CommonTimestamp(params))
+                    PanicOnError(response)
             }
         
                 //
@@ -1792,18 +1792,18 @@ func  (this *htx) FetchMarkets(optionalArgs ...interface{}) <- chan interface{} 
                 var key interface{} = GetValue(keys, i)
                 if IsTrue(this.SafeBool(types, key)) {
                     if IsTrue(IsEqual(key, "spot")) {
-                        AppendToArray(&promises,this.FetchMarketsByTypeAndSubType("spot", nil, params))
+                        AppendToArray(&promises, this.FetchMarketsByTypeAndSubType("spot", nil, params))
                     } else if IsTrue(IsEqual(key, "linear")) {
-                        AppendToArray(&promises,this.FetchMarketsByTypeAndSubType(nil, "linear", params))
+                        AppendToArray(&promises, this.FetchMarketsByTypeAndSubType(nil, "linear", params))
                     } else if IsTrue(IsEqual(key, "inverse")) {
-                        AppendToArray(&promises,this.FetchMarketsByTypeAndSubType("swap", "inverse", params))
-                        AppendToArray(&promises,this.FetchMarketsByTypeAndSubType("future", "inverse", params))
+                        AppendToArray(&promises, this.FetchMarketsByTypeAndSubType("swap", "inverse", params))
+                        AppendToArray(&promises, this.FetchMarketsByTypeAndSubType("future", "inverse", params))
                     }
                 }
             }
             
-        promises = (<-promiseAll(promises))
-            PanicOnError(promises)
+            promises = (<-promiseAll(promises))
+                PanicOnError(promises)
             for i := 0; IsLessThan(i, GetArrayLength(promises)); i++ {
                 allMarkets = this.ArrayConcat(allMarkets, GetValue(promises, i))
             }
@@ -1842,23 +1842,23 @@ func  (this *htx) FetchMarketsByTypeAndSubType(typeVar interface{}, subType inte
                 if IsTrue(IsEqual(subType, "linear")) {
                     AddElementToObject(request, "business_type", "all") // override default to fetch all linear markets
                     
-        response = (<-this.ContractPublicGetLinearSwapApiV1SwapContractInfo(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPublicGetLinearSwapApiV1SwapContractInfo(this.Extend(request, params)))
+                        PanicOnError(response)
                 } else if IsTrue(IsEqual(subType, "inverse")) {
                     if IsTrue(IsEqual(typeVar, "future")) {
                         
-        response = (<-this.ContractPublicGetApiV1ContractContractInfo(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPublicGetApiV1ContractContractInfo(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(IsEqual(typeVar, "swap")) {
                         
-        response = (<-this.ContractPublicGetSwapApiV1SwapContractInfo(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPublicGetSwapApiV1SwapContractInfo(this.Extend(request, params)))
+                            PanicOnError(response)
                     }
                 }
             } else {
                 
-        response = (<-this.SpotPublicGetV1CommonSymbols(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.SpotPublicGetV1CommonSymbols(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             //
             // spot
@@ -2070,7 +2070,7 @@ func  (this *htx) FetchMarketsByTypeAndSubType(typeVar interface{}, subType inte
                     createdDate = Add(Add(Add(Add(Add(Add(Add(Add(Add(Add(GetValue(createdArray, 0), GetValue(createdArray, 1)), GetValue(createdArray, 2)), GetValue(createdArray, 3)), "-"), GetValue(createdArray, 4)), GetValue(createdArray, 5)), "-"), GetValue(createdArray, 6)), GetValue(createdArray, 7)), " 00:00:00")
                     created = this.Parse8601(createdDate)
                 }
-                AppendToArray(&result,map[string]interface{} {
+                AppendToArray(&result, map[string]interface{} {
                     "id": id,
                     "lowercaseId": lowercaseId,
                     "symbol": symbol,
@@ -2300,25 +2300,25 @@ func  (this *htx) FetchTicker(symbol interface{}, optionalArgs ...interface{}) <
             if IsTrue(GetValue(market, "linear")) {
                 AddElementToObject(request, "contract_code", GetValue(market, "id"))
                 
-        response = (<-this.ContractPublicGetLinearSwapExMarketDetailMerged(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetLinearSwapExMarketDetailMerged(this.Extend(request, params)))
+                    PanicOnError(response)
             } else if IsTrue(GetValue(market, "inverse")) {
                 if IsTrue(GetValue(market, "future")) {
                     AddElementToObject(request, "symbol", GetValue(market, "id"))
                     
-        response = (<-this.ContractPublicGetMarketDetailMerged(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPublicGetMarketDetailMerged(this.Extend(request, params)))
+                        PanicOnError(response)
                 } else if IsTrue(GetValue(market, "swap")) {
                     AddElementToObject(request, "contract_code", GetValue(market, "id"))
                     
-        response = (<-this.ContractPublicGetSwapExMarketDetailMerged(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPublicGetSwapExMarketDetailMerged(this.Extend(request, params)))
+                        PanicOnError(response)
                 }
             } else {
                 AddElementToObject(request, "symbol", GetValue(market, "id"))
                 
-        response = (<-this.SpotPublicGetMarketDetailMerged(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.SpotPublicGetMarketDetailMerged(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             //
             // spot
@@ -2432,17 +2432,17 @@ func  (this *htx) FetchTickers(optionalArgs ...interface{}) <- chan interface{} 
                         AddElementToObject(request, "business_type", "all")
                     }
                     
-        response = (<-this.ContractPublicGetLinearSwapExMarketDetailBatchMerged(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPublicGetLinearSwapExMarketDetailBatchMerged(this.Extend(request, params)))
+                        PanicOnError(response)
                 } else if IsTrue(inverse) {
                     if IsTrue(future) {
                         
-        response = (<-this.ContractPublicGetMarketDetailBatchMerged(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPublicGetMarketDetailBatchMerged(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(swap) {
                         
-        response = (<-this.ContractPublicGetSwapExMarketDetailBatchMerged(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPublicGetSwapExMarketDetailBatchMerged(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else {
                         panic(NotSupported(Add(this.Id, " fetchTickers() you have to set params[\"type\"] to either \"swap\" or \"future\" for inverse contracts")))
                     }
@@ -2451,8 +2451,8 @@ func  (this *htx) FetchTickers(optionalArgs ...interface{}) <- chan interface{} 
                 }
             } else {
                 
-        response = (<-this.SpotPublicGetMarketTickers(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.SpotPublicGetMarketTickers(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             //
             // spot
@@ -2549,16 +2549,16 @@ func  (this *htx) FetchLastPrices(optionalArgs ...interface{}) <- chan interface
             var response interface{} = nil
             if IsTrue(IsTrue((IsTrue((IsEqual(typeVar, "swap"))) || IsTrue((IsEqual(typeVar, "future"))))) && IsTrue((IsEqual(subType, "linear")))) {
                 
-        response = (<-this.ContractPublicGetLinearSwapExMarketTrade(params))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetLinearSwapExMarketTrade(params))
+                    PanicOnError(response)
             } else if IsTrue(IsTrue((IsEqual(typeVar, "swap"))) && IsTrue((IsEqual(subType, "inverse")))) {
                 
-        response = (<-this.ContractPublicGetSwapExMarketTrade(params))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetSwapExMarketTrade(params))
+                    PanicOnError(response)
             } else if IsTrue(IsTrue((IsEqual(typeVar, "future"))) && IsTrue((IsEqual(subType, "inverse")))) {
                 
-        response = (<-this.ContractPublicGetMarketTrade(params))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetMarketTrade(params))
+                    PanicOnError(response)
             } else {
                 panic(NotSupported(Add(Add(Add(this.Id, " fetchLastPrices() does not support "), typeVar), " markets yet")))
             }
@@ -2622,19 +2622,19 @@ func  (this *htx) FetchOrderBook(symbol interface{}, optionalArgs ...interface{}
             if IsTrue(GetValue(market, "linear")) {
                 AddElementToObject(request, "contract_code", GetValue(market, "id"))
                 
-        response = (<-this.ContractPublicGetLinearSwapExMarketDepth(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetLinearSwapExMarketDepth(this.Extend(request, params)))
+                    PanicOnError(response)
             } else if IsTrue(GetValue(market, "inverse")) {
                 if IsTrue(GetValue(market, "future")) {
                     AddElementToObject(request, "symbol", GetValue(market, "id"))
                     
-        response = (<-this.ContractPublicGetMarketDepth(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPublicGetMarketDepth(this.Extend(request, params)))
+                        PanicOnError(response)
                 } else if IsTrue(GetValue(market, "swap")) {
                     AddElementToObject(request, "contract_code", GetValue(market, "id"))
                     
-        response = (<-this.ContractPublicGetSwapExMarketDepth(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPublicGetSwapExMarketDepth(this.Extend(request, params)))
+                        PanicOnError(response)
                 }
             } else {
                 if IsTrue(!IsEqual(limit, nil)) {
@@ -2651,8 +2651,8 @@ func  (this *htx) FetchOrderBook(symbol interface{}, optionalArgs ...interface{}
                 }
                 AddElementToObject(request, "symbol", GetValue(market, "id"))
                 
-        response = (<-this.SpotPublicGetMarketDepth(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.SpotPublicGetMarketDepth(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             //
             // spot, future, swap
@@ -2990,8 +2990,8 @@ func  (this *htx) FetchMyTrades(optionalArgs ...interface{}) <- chan interface{}
                 request = GetValue(requestparamsVariable,0);
                 params = GetValue(requestparamsVariable,1)
                 
-        response = (<-this.SpotPrivateGetV1OrderMatchresults(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.SpotPrivateGetV1OrderMatchresults(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 if IsTrue(IsEqual(symbol, nil)) {
                     panic(ArgumentsRequired(Add(this.Id, " fetchMyTrades() requires a symbol argument")))
@@ -3015,23 +3015,23 @@ func  (this *htx) FetchMyTrades(optionalArgs ...interface{}) <- chan interface{}
                     marginMode = Ternary(IsTrue((IsEqual(marginMode, nil))), "cross", marginMode)
                     if IsTrue(IsEqual(marginMode, "isolated")) {
                         
-        response = (<-this.ContractPrivatePostLinearSwapApiV3SwapMatchresultsExact(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV3SwapMatchresultsExact(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(IsEqual(marginMode, "cross")) {
                         
-        response = (<-this.ContractPrivatePostLinearSwapApiV3SwapCrossMatchresultsExact(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV3SwapCrossMatchresultsExact(this.Extend(request, params)))
+                            PanicOnError(response)
                     }
                 } else if IsTrue(GetValue(market, "inverse")) {
                     if IsTrue(IsEqual(marketType, "future")) {
                         AddElementToObject(request, "symbol", GetValue(market, "settleId"))
                         
-        response = (<-this.ContractPrivatePostApiV3ContractMatchresultsExact(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV3ContractMatchresultsExact(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(IsEqual(marketType, "swap")) {
                         
-        response = (<-this.ContractPrivatePostSwapApiV3SwapMatchresultsExact(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV3SwapMatchresultsExact(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else {
                         panic(NotSupported(Add(Add(Add(this.Id, " fetchMyTrades() does not support "), marketType), " markets")))
                     }
@@ -3152,30 +3152,30 @@ func  (this *htx) FetchTrades(symbol interface{}, optionalArgs ...interface{}) <
                 if IsTrue(GetValue(market, "inverse")) {
                     AddElementToObject(request, "symbol", GetValue(market, "id"))
                     
-        response = (<-this.ContractPublicGetMarketHistoryTrade(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPublicGetMarketHistoryTrade(this.Extend(request, params)))
+                        PanicOnError(response)
                 } else if IsTrue(GetValue(market, "linear")) {
                     AddElementToObject(request, "contract_code", GetValue(market, "id"))
                     
-        response = (<-this.ContractPublicGetLinearSwapExMarketHistoryTrade(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPublicGetLinearSwapExMarketHistoryTrade(this.Extend(request, params)))
+                        PanicOnError(response)
                 }
             } else if IsTrue(GetValue(market, "swap")) {
                 AddElementToObject(request, "contract_code", GetValue(market, "id"))
                 if IsTrue(GetValue(market, "inverse")) {
                     
-        response = (<-this.ContractPublicGetSwapExMarketHistoryTrade(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPublicGetSwapExMarketHistoryTrade(this.Extend(request, params)))
+                        PanicOnError(response)
                 } else if IsTrue(GetValue(market, "linear")) {
                     
-        response = (<-this.ContractPublicGetLinearSwapExMarketHistoryTrade(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPublicGetLinearSwapExMarketHistoryTrade(this.Extend(request, params)))
+                        PanicOnError(response)
                 }
             } else {
                 AddElementToObject(request, "symbol", GetValue(market, "id"))
                 
-        response = (<-this.SpotPublicGetMarketHistoryTrade(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.SpotPublicGetMarketHistoryTrade(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             //
             //     {
@@ -3207,7 +3207,7 @@ func  (this *htx) FetchTrades(symbol interface{}, optionalArgs ...interface{}) <
                 var trades interface{} = this.SafeValue(GetValue(data, i), "data", []interface{}{})
                 for j := 0; IsLessThan(j, GetArrayLength(trades)); j++ {
                     var trade interface{} = this.ParseTrade(GetValue(trades, j), market)
-                    AppendToArray(&result,trade)
+                    AppendToArray(&result, trade)
                 }
             }
             result = this.SortBy(result, "timestamp")
@@ -3317,35 +3317,35 @@ func  (this *htx) FetchOHLCV(symbol interface{}, optionalArgs ...interface{}) <-
                     AddElementToObject(request, "symbol", GetValue(market, "id"))
                     if IsTrue(IsEqual(priceType, "mark")) {
                         
-        response = (<-this.ContractPublicGetIndexMarketHistoryMarkPriceKline(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPublicGetIndexMarketHistoryMarkPriceKline(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(IsEqual(priceType, "index")) {
                         
-        response = (<-this.ContractPublicGetIndexMarketHistoryIndex(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPublicGetIndexMarketHistoryIndex(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(IsEqual(priceType, "premiumIndex")) {
                         panic(BadRequest(Add(Add(Add(Add(Add(this.Id, " "), GetValue(market, "type")), " has no api endpoint for "), priceType), " kline data")))
                     } else {
                         
-        response = (<-this.ContractPublicGetMarketHistoryKline(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPublicGetMarketHistoryKline(this.Extend(request, params)))
+                            PanicOnError(response)
                     }
                 } else if IsTrue(GetValue(market, "linear")) {
                     AddElementToObject(request, "contract_code", GetValue(market, "id"))
                     if IsTrue(IsEqual(priceType, "mark")) {
                         
-        response = (<-this.ContractPublicGetIndexMarketHistoryLinearSwapMarkPriceKline(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPublicGetIndexMarketHistoryLinearSwapMarkPriceKline(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(IsEqual(priceType, "index")) {
                         panic(BadRequest(Add(Add(Add(Add(Add(this.Id, " "), GetValue(market, "type")), " has no api endpoint for "), priceType), " kline data")))
                     } else if IsTrue(IsEqual(priceType, "premiumIndex")) {
                         
-        response = (<-this.ContractPublicGetIndexMarketHistoryLinearSwapPremiumIndexKline(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPublicGetIndexMarketHistoryLinearSwapPremiumIndexKline(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else {
                         
-        response = (<-this.ContractPublicGetLinearSwapExMarketHistoryKline(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPublicGetLinearSwapExMarketHistoryKline(this.Extend(request, params)))
+                            PanicOnError(response)
                     }
                 }
             } else if IsTrue(GetValue(market, "swap")) {
@@ -3353,34 +3353,34 @@ func  (this *htx) FetchOHLCV(symbol interface{}, optionalArgs ...interface{}) <-
                 if IsTrue(GetValue(market, "inverse")) {
                     if IsTrue(IsEqual(priceType, "mark")) {
                         
-        response = (<-this.ContractPublicGetIndexMarketHistorySwapMarkPriceKline(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPublicGetIndexMarketHistorySwapMarkPriceKline(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(IsEqual(priceType, "index")) {
                         panic(BadRequest(Add(Add(Add(Add(Add(this.Id, " "), GetValue(market, "type")), " has no api endpoint for "), priceType), " kline data")))
                     } else if IsTrue(IsEqual(priceType, "premiumIndex")) {
                         
-        response = (<-this.ContractPublicGetIndexMarketHistorySwapPremiumIndexKline(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPublicGetIndexMarketHistorySwapPremiumIndexKline(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else {
                         
-        response = (<-this.ContractPublicGetSwapExMarketHistoryKline(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPublicGetSwapExMarketHistoryKline(this.Extend(request, params)))
+                            PanicOnError(response)
                     }
                 } else if IsTrue(GetValue(market, "linear")) {
                     if IsTrue(IsEqual(priceType, "mark")) {
                         
-        response = (<-this.ContractPublicGetIndexMarketHistoryLinearSwapMarkPriceKline(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPublicGetIndexMarketHistoryLinearSwapMarkPriceKline(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(IsEqual(priceType, "index")) {
                         panic(BadRequest(Add(Add(Add(Add(Add(this.Id, " "), GetValue(market, "type")), " has no api endpoint for "), priceType), " kline data")))
                     } else if IsTrue(IsEqual(priceType, "premiumIndex")) {
                         
-        response = (<-this.ContractPublicGetIndexMarketHistoryLinearSwapPremiumIndexKline(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPublicGetIndexMarketHistoryLinearSwapPremiumIndexKline(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else {
                         
-        response = (<-this.ContractPublicGetLinearSwapExMarketHistoryKline(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPublicGetLinearSwapExMarketHistoryKline(this.Extend(request, params)))
+                            PanicOnError(response)
                     }
                 }
             } else {
@@ -3394,8 +3394,8 @@ func  (this *htx) FetchOHLCV(symbol interface{}, optionalArgs ...interface{}) <-
                         AddElementToObject(request, "size", mathMin(limit, 2000)) // max 2000
                     }
                     
-        response = (<-this.SpotPublicGetMarketHistoryKline(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.SpotPublicGetMarketHistoryKline(this.Extend(request, params)))
+                        PanicOnError(response)
                 } else {
                     // "from & to" only available for the this endpoint
                     if IsTrue(!IsEqual(since, nil)) {
@@ -3408,8 +3408,8 @@ func  (this *htx) FetchOHLCV(symbol interface{}, optionalArgs ...interface{}) <-
                         AddElementToObject(request, "size", mathMin(1000, limit)) // max 1000, otherwise default returns 150
                     }
                     
-        response = (<-this.SpotPublicGetMarketHistoryCandles(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.SpotPublicGetMarketHistoryCandles(this.Extend(request, params)))
+                        PanicOnError(response)
                 }
             }
             //
@@ -3772,12 +3772,12 @@ func  (this *htx) FetchBalance(optionalArgs ...interface{}) <- chan interface{} 
                 if IsTrue(margin) {
                     if IsTrue(isolated) {
                         
-        response = (<-this.SpotPrivateGetV1MarginAccountsBalance(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.SpotPrivateGetV1MarginAccountsBalance(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else {
                         
-        response = (<-this.SpotPrivateGetV1CrossMarginAccountsBalance(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.SpotPrivateGetV1CrossMarginAccountsBalance(this.Extend(request, params)))
+                            PanicOnError(response)
                     }
                 } else {
         
@@ -3788,32 +3788,32 @@ func  (this *htx) FetchBalance(optionalArgs ...interface{}) <- chan interface{} 
                     PanicOnError(accountId)
                     AddElementToObject(request, "account-id", accountId)
                     
-        response = (<-this.SpotPrivateGetV1AccountAccountsAccountIdBalance(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.SpotPrivateGetV1AccountAccountsAccountIdBalance(this.Extend(request, params)))
+                        PanicOnError(response)
                 }
             } else if IsTrue(isUnifiedAccount) {
                 
-        response = (<-this.ContractPrivateGetLinearSwapApiV3UnifiedAccountInfo(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPrivateGetLinearSwapApiV3UnifiedAccountInfo(this.Extend(request, params)))
+                    PanicOnError(response)
             } else if IsTrue(linear) {
                 if IsTrue(isolated) {
                     
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapAccountInfo(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapAccountInfo(this.Extend(request, params)))
+                        PanicOnError(response)
                 } else {
                     
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossAccountInfo(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossAccountInfo(this.Extend(request, params)))
+                        PanicOnError(response)
                 }
             } else if IsTrue(inverse) {
                 if IsTrue(future) {
                     
-        response = (<-this.ContractPrivatePostApiV1ContractAccountInfo(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractAccountInfo(this.Extend(request, params)))
+                        PanicOnError(response)
                 } else {
                     
-        response = (<-this.ContractPrivatePostSwapApiV1SwapAccountInfo(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapAccountInfo(this.Extend(request, params)))
+                        PanicOnError(response)
                 }
             }
             //
@@ -4125,13 +4125,13 @@ func  (this *htx) FetchOrder(id interface{}, optionalArgs ...interface{}) <- cha
                     // they expect clientOrderId instead of client-order-id
                     // request['clientOrderId'] = clientOrderId;
                     
-        response = (<-this.SpotPrivateGetV1OrderOrdersGetClientOrder(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.SpotPrivateGetV1OrderOrdersGetClientOrder(this.Extend(request, params)))
+                        PanicOnError(response)
                 } else {
                     AddElementToObject(request, "order-id", id)
                     
-        response = (<-this.SpotPrivateGetV1OrderOrdersOrderId(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.SpotPrivateGetV1OrderOrdersOrderId(this.Extend(request, params)))
+                        PanicOnError(response)
                 }
             } else {
                 if IsTrue(IsEqual(symbol, nil)) {
@@ -4153,23 +4153,23 @@ func  (this *htx) FetchOrder(id interface{}, optionalArgs ...interface{}) <- cha
                     marginMode = Ternary(IsTrue((IsEqual(marginMode, nil))), "cross", marginMode)
                     if IsTrue(IsEqual(marginMode, "isolated")) {
                         
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapOrderInfo(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapOrderInfo(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(IsEqual(marginMode, "cross")) {
                         
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossOrderInfo(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossOrderInfo(this.Extend(request, params)))
+                            PanicOnError(response)
                     }
                 } else if IsTrue(GetValue(market, "inverse")) {
                     if IsTrue(IsEqual(marketType, "future")) {
                         AddElementToObject(request, "symbol", GetValue(market, "settleId"))
                         
-        response = (<-this.ContractPrivatePostApiV1ContractOrderInfo(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractOrderInfo(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(IsEqual(marketType, "swap")) {
                         
-        response = (<-this.ContractPrivatePostSwapApiV1SwapOrderInfo(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapOrderInfo(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else {
                         panic(NotSupported(Add(Add(Add(this.Id, " fetchOrder() does not support "), marketType), " markets")))
                     }
@@ -4369,12 +4369,12 @@ func  (this *htx) FetchSpotOrdersByStates(states interface{}, optionalArgs ...in
             var response interface{} = nil
             if IsTrue(IsEqual(method, "spot_private_get_v1_order_orders")) {
                 
-        response = (<-this.SpotPrivateGetV1OrderOrders(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.SpotPrivateGetV1OrderOrders(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 
-        response = (<-this.SpotPrivateGetV1OrderHistory(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.SpotPrivateGetV1OrderHistory(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             //
             // spot_private_get_v1_order_orders GET /v1/order/orders
@@ -4508,77 +4508,77 @@ func  (this *htx) FetchContractOrders(optionalArgs ...interface{}) <- chan inter
                 if IsTrue(IsEqual(marginMode, "isolated")) {
                     if IsTrue(trigger) {
                         
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTriggerHisorders(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTriggerHisorders(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(stopLossTakeProfit) {
                         
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTpslHisorders(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTpslHisorders(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(trailing) {
                         
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTrackHisorders(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTrackHisorders(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else {
                         
-        response = (<-this.ContractPrivatePostLinearSwapApiV3SwapHisorders(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV3SwapHisorders(this.Extend(request, params)))
+                            PanicOnError(response)
                     }
                 } else if IsTrue(IsEqual(marginMode, "cross")) {
                     if IsTrue(trigger) {
                         
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTriggerHisorders(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTriggerHisorders(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(stopLossTakeProfit) {
                         
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTpslHisorders(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTpslHisorders(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(trailing) {
                         
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTrackHisorders(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTrackHisorders(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else {
                         
-        response = (<-this.ContractPrivatePostLinearSwapApiV3SwapCrossHisorders(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV3SwapCrossHisorders(this.Extend(request, params)))
+                            PanicOnError(response)
                     }
                 }
             } else if IsTrue(GetValue(market, "inverse")) {
                 if IsTrue(GetValue(market, "swap")) {
                     if IsTrue(trigger) {
                         
-        response = (<-this.ContractPrivatePostSwapApiV1SwapTriggerHisorders(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapTriggerHisorders(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(stopLossTakeProfit) {
                         
-        response = (<-this.ContractPrivatePostSwapApiV1SwapTpslHisorders(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapTpslHisorders(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(trailing) {
                         
-        response = (<-this.ContractPrivatePostSwapApiV1SwapTrackHisorders(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapTrackHisorders(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else {
                         
-        response = (<-this.ContractPrivatePostSwapApiV3SwapHisorders(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV3SwapHisorders(this.Extend(request, params)))
+                            PanicOnError(response)
                     }
                 } else if IsTrue(GetValue(market, "future")) {
                     AddElementToObject(request, "symbol", GetValue(market, "settleId"))
                     if IsTrue(trigger) {
                         
-        response = (<-this.ContractPrivatePostApiV1ContractTriggerHisorders(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractTriggerHisorders(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(stopLossTakeProfit) {
                         
-        response = (<-this.ContractPrivatePostApiV1ContractTpslHisorders(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractTpslHisorders(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else if IsTrue(trailing) {
                         
-        response = (<-this.ContractPrivatePostApiV1ContractTrackHisorders(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractTrackHisorders(this.Extend(request, params)))
+                            PanicOnError(response)
                     } else {
                         
-        response = (<-this.ContractPrivatePostApiV3ContractHisorders(this.Extend(request, params)))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV3ContractHisorders(this.Extend(request, params)))
+                            PanicOnError(response)
                     }
                 }
             }
@@ -4821,7 +4821,7 @@ func  (this *htx) FetchOrders(optionalArgs ...interface{}) <- chan interface{} {
                     ch <- retRes441019
                     return nil
             }
-                return nil
+        
             }()
             return ch
         }
@@ -4891,7 +4891,7 @@ func  (this *htx) FetchClosedOrders(optionalArgs ...interface{}) <- chan interfa
                     ch <- retRes444819
                     return nil
             }
-                return nil
+        
             }()
             return ch
         }
@@ -4968,8 +4968,8 @@ func  (this *htx) FetchOpenOrders(optionalArgs ...interface{}) <- chan interface
                 }
                 params = this.Omit(params, "account-id")
                 
-        response = (<-this.SpotPrivateGetV1OrderOpenOrders(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.SpotPrivateGetV1OrderOpenOrders(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 if IsTrue(!IsEqual(symbol, nil)) {
                     // throw new ArgumentsRequired (this.id + ' fetchOpenOrders() requires a symbol argument');
@@ -4991,77 +4991,77 @@ func  (this *htx) FetchOpenOrders(optionalArgs ...interface{}) <- chan interface
                     if IsTrue(IsEqual(marginMode, "isolated")) {
                         if IsTrue(trigger) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTriggerOpenorders(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTriggerOpenorders(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(stopLossTakeProfit) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTpslOpenorders(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTpslOpenorders(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(trailing) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTrackOpenorders(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTrackOpenorders(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapOpenorders(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapOpenorders(this.Extend(request, params)))
+                                PanicOnError(response)
                         }
                     } else if IsTrue(IsEqual(marginMode, "cross")) {
                         if IsTrue(trigger) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTriggerOpenorders(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTriggerOpenorders(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(stopLossTakeProfit) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTpslOpenorders(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTpslOpenorders(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(trailing) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTrackOpenorders(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTrackOpenorders(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossOpenorders(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossOpenorders(this.Extend(request, params)))
+                                PanicOnError(response)
                         }
                     }
                 } else if IsTrue(IsEqual(subType, "inverse")) {
                     if IsTrue(IsEqual(marketType, "swap")) {
                         if IsTrue(trigger) {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapTriggerOpenorders(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapTriggerOpenorders(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(stopLossTakeProfit) {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapTpslOpenorders(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapTpslOpenorders(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(trailing) {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapTrackOpenorders(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapTrackOpenorders(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapOpenorders(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapOpenorders(this.Extend(request, params)))
+                                PanicOnError(response)
                         }
                     } else if IsTrue(IsEqual(marketType, "future")) {
                         AddElementToObject(request, "symbol", this.SafeString(market, "settleId", "usdt"))
                         if IsTrue(trigger) {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractTriggerOpenorders(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractTriggerOpenorders(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(stopLossTakeProfit) {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractTpslOpenorders(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractTpslOpenorders(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(trailing) {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractTrackOpenorders(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractTrackOpenorders(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractOpenorders(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractOpenorders(this.Extend(request, params)))
+                                PanicOnError(response)
                         }
                     }
                 }
@@ -6103,8 +6103,8 @@ func  (this *htx) CreateOrder(symbol interface{}, typeVar interface{}, side inte
                 spotRequest:= (<-this.CreateSpotOrderRequest(symbol, typeVar, side, amount, price, params))
                 PanicOnError(spotRequest)
                 
-        response = (<-this.SpotPrivatePostV1OrderOrdersPlace(spotRequest))
-                PanicOnError(response)
+            response = (<-this.SpotPrivatePostV1OrderOrdersPlace(spotRequest))
+                    PanicOnError(response)
             } else {
                 var contractRequest interface{} = this.CreateContractOrderRequest(symbol, typeVar, side, amount, price, params)
                 if IsTrue(GetValue(market, "linear")) {
@@ -6116,38 +6116,38 @@ func  (this *htx) CreateOrder(symbol interface{}, typeVar interface{}, side inte
                     if IsTrue(IsEqual(marginMode, "isolated")) {
                         if IsTrue(isTrigger) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTriggerOrder(contractRequest))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTriggerOrder(contractRequest))
+                                PanicOnError(response)
                         } else if IsTrue(IsTrue(isStopLossTriggerOrder) || IsTrue(isTakeProfitTriggerOrder)) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTpslOrder(contractRequest))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTpslOrder(contractRequest))
+                                PanicOnError(response)
                         } else if IsTrue(isTrailingPercentOrder) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTrackOrder(contractRequest))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTrackOrder(contractRequest))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapOrder(contractRequest))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapOrder(contractRequest))
+                                PanicOnError(response)
                         }
                     } else if IsTrue(IsEqual(marginMode, "cross")) {
                         if IsTrue(isTrigger) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTriggerOrder(contractRequest))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTriggerOrder(contractRequest))
+                                PanicOnError(response)
                         } else if IsTrue(IsTrue(isStopLossTriggerOrder) || IsTrue(isTakeProfitTriggerOrder)) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTpslOrder(contractRequest))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTpslOrder(contractRequest))
+                                PanicOnError(response)
                         } else if IsTrue(isTrailingPercentOrder) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTrackOrder(contractRequest))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTrackOrder(contractRequest))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossOrder(contractRequest))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossOrder(contractRequest))
+                                PanicOnError(response)
                         }
                     }
                 } else if IsTrue(GetValue(market, "inverse")) {
@@ -6158,38 +6158,38 @@ func  (this *htx) CreateOrder(symbol interface{}, typeVar interface{}, side inte
                     if IsTrue(GetValue(market, "swap")) {
                         if IsTrue(isTrigger) {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapTriggerOrder(contractRequest))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapTriggerOrder(contractRequest))
+                                PanicOnError(response)
                         } else if IsTrue(IsTrue(isStopLossTriggerOrder) || IsTrue(isTakeProfitTriggerOrder)) {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapTpslOrder(contractRequest))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapTpslOrder(contractRequest))
+                                PanicOnError(response)
                         } else if IsTrue(isTrailingPercentOrder) {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapTrackOrder(contractRequest))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapTrackOrder(contractRequest))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapOrder(contractRequest))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapOrder(contractRequest))
+                                PanicOnError(response)
                         }
                     } else if IsTrue(GetValue(market, "future")) {
                         if IsTrue(isTrigger) {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractTriggerOrder(contractRequest))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractTriggerOrder(contractRequest))
+                                PanicOnError(response)
                         } else if IsTrue(IsTrue(isStopLossTriggerOrder) || IsTrue(isTakeProfitTriggerOrder)) {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractTpslOrder(contractRequest))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractTpslOrder(contractRequest))
+                                PanicOnError(response)
                         } else if IsTrue(isTrailingPercentOrder) {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractTrackOrder(contractRequest))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractTrackOrder(contractRequest))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractOrder(contractRequest))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractOrder(contractRequest))
+                                PanicOnError(response)
                         }
                     }
                 }
@@ -6322,42 +6322,42 @@ func  (this *htx) CreateOrders(orders interface{}, optionalArgs ...interface{}) 
                 var orderRequest interface{} = nil
                 if IsTrue(GetValue(market, "spot")) {
                     
-        orderRequest = (<-this.CreateSpotOrderRequest(marketId, typeVar, side, amount, price, orderParams))
-                    PanicOnError(orderRequest)
+            orderRequest = (<-this.CreateSpotOrderRequest(marketId, typeVar, side, amount, price, orderParams))
+                        PanicOnError(orderRequest)
                 } else {
                     orderRequest = this.CreateContractOrderRequest(marketId, typeVar, side, amount, price, orderParams)
                 }
                 orderRequest = this.Omit(orderRequest, "marginMode")
-                AppendToArray(&ordersRequests,orderRequest)
+                AppendToArray(&ordersRequests, orderRequest)
             }
             var request interface{} = map[string]interface{} {}
             var response interface{} = nil
             if IsTrue(GetValue(market, "spot")) {
                 
-        response = (<-this.PrivatePostOrderBatchOrders(ordersRequests))
-                PanicOnError(response)
+            response = (<-this.PrivatePostOrderBatchOrders(ordersRequests))
+                    PanicOnError(response)
             } else {
                 AddElementToObject(request, "orders_data", ordersRequests)
                 if IsTrue(GetValue(market, "linear")) {
                     marginMode = Ternary(IsTrue((IsEqual(marginMode, nil))), "cross", marginMode)
                     if IsTrue(IsEqual(marginMode, "isolated")) {
                         
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapBatchorder(request))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapBatchorder(request))
+                            PanicOnError(response)
                     } else if IsTrue(IsEqual(marginMode, "cross")) {
                         
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossBatchorder(request))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossBatchorder(request))
+                            PanicOnError(response)
                     }
                 } else if IsTrue(GetValue(market, "inverse")) {
                     if IsTrue(GetValue(market, "swap")) {
                         
-        response = (<-this.ContractPrivatePostSwapApiV1SwapBatchorder(request))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapBatchorder(request))
+                            PanicOnError(response)
                     } else if IsTrue(GetValue(market, "future")) {
                         
-        response = (<-this.ContractPrivatePostApiV1ContractBatchorder(request))
-                        PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractBatchorder(request))
+                            PanicOnError(response)
                     }
                 }
             }
@@ -6457,14 +6457,14 @@ func  (this *htx) CancelOrder(id interface{}, optionalArgs ...interface{}) <- ch
                 if IsTrue(IsEqual(clientOrderId, nil)) {
                     AddElementToObject(request, "order-id", id)
                     
-        response = (<-this.SpotPrivatePostV1OrderOrdersOrderIdSubmitcancel(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.SpotPrivatePostV1OrderOrdersOrderIdSubmitcancel(this.Extend(request, params)))
+                        PanicOnError(response)
                 } else {
                     AddElementToObject(request, "client-order-id", clientOrderId)
                     params = this.Omit(params, []interface{}{"client-order-id", "clientOrderId"})
                     
-        response = (<-this.SpotPrivatePostV1OrderOrdersSubmitCancelClientOrder(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.SpotPrivatePostV1OrderOrdersSubmitCancelClientOrder(this.Extend(request, params)))
+                        PanicOnError(response)
                 }
             } else {
                 if IsTrue(IsEqual(symbol, nil)) {
@@ -6495,76 +6495,76 @@ func  (this *htx) CancelOrder(id interface{}, optionalArgs ...interface{}) <- ch
                     if IsTrue(IsEqual(marginMode, "isolated")) {
                         if IsTrue(trigger) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTriggerCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTriggerCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(stopLossTakeProfit) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTpslCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTpslCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(trailing) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTrackCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTrackCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         }
                     } else if IsTrue(IsEqual(marginMode, "cross")) {
                         if IsTrue(trigger) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTriggerCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTriggerCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(stopLossTakeProfit) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTpslCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTpslCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(trailing) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTrackCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTrackCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         }
                     }
                 } else if IsTrue(GetValue(market, "inverse")) {
                     if IsTrue(GetValue(market, "swap")) {
                         if IsTrue(trigger) {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapTriggerCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapTriggerCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(stopLossTakeProfit) {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapTpslCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapTpslCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(trailing) {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapTrackCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapTrackCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         }
                     } else if IsTrue(GetValue(market, "future")) {
                         if IsTrue(trigger) {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractTriggerCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractTriggerCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(stopLossTakeProfit) {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractTpslCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractTpslCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(trailing) {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractTrackCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractTrackCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         }
                     }
                 } else {
@@ -6651,8 +6651,8 @@ func  (this *htx) CancelOrders(ids interface{}, optionalArgs ...interface{}) <- 
                     params = this.Omit(params, []interface{}{"client-order-id", "client-order-ids", "clientOrderId", "clientOrderIds"})
                 }
                 
-        response = (<-this.SpotPrivatePostV1OrderOrdersBatchcancel(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.SpotPrivatePostV1OrderOrdersBatchcancel(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 if IsTrue(IsEqual(symbol, nil)) {
                     panic(ArgumentsRequired(Add(this.Id, " cancelOrders() requires a symbol argument")))
@@ -6682,60 +6682,60 @@ func  (this *htx) CancelOrders(ids interface{}, optionalArgs ...interface{}) <- 
                     if IsTrue(IsEqual(marginMode, "isolated")) {
                         if IsTrue(trigger) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTriggerCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTriggerCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(stopLossTakeProfit) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTpslCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTpslCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         }
                     } else if IsTrue(IsEqual(marginMode, "cross")) {
                         if IsTrue(trigger) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTriggerCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTriggerCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(stopLossTakeProfit) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTpslCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTpslCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         }
                     }
                 } else if IsTrue(GetValue(market, "inverse")) {
                     if IsTrue(GetValue(market, "swap")) {
                         if IsTrue(trigger) {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapTriggerCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapTriggerCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(stopLossTakeProfit) {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapTpslCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapTpslCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         }
                     } else if IsTrue(GetValue(market, "future")) {
                         if IsTrue(trigger) {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractTriggerCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractTriggerCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(stopLossTakeProfit) {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractTpslCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractTpslCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractCancel(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractCancel(this.Extend(request, params)))
+                                PanicOnError(response)
                         }
                     }
                 } else {
@@ -6841,7 +6841,7 @@ func  (this *htx) ParseCancelOrders(orders interface{}) interface{}  {
     var result interface{} = []interface{}{}
     for i := 0; IsLessThan(i, GetArrayLength(success)); i++ {
         var order interface{} = GetValue(success, i)
-        AppendToArray(&result,this.SafeOrder(map[string]interface{} {
+        AppendToArray(&result, this.SafeOrder(map[string]interface{} {
             "info": order,
             "id": order,
             "status": "canceled",
@@ -6849,7 +6849,7 @@ func  (this *htx) ParseCancelOrders(orders interface{}) interface{}  {
     }
     for i := 0; IsLessThan(i, GetArrayLength(failed)); i++ {
         var order interface{} = GetValue(failed, i)
-        AppendToArray(&result,this.SafeOrder(map[string]interface{} {
+        AppendToArray(&result, this.SafeOrder(map[string]interface{} {
             "info": order,
             "id": this.SafeString2(order, "order-id", "order_id"),
             "status": "failed",
@@ -6896,8 +6896,8 @@ func  (this *htx) CancelAllOrders(optionalArgs ...interface{}) <- chan interface
                     AddElementToObject(request, "symbol", GetValue(market, "id"))
                 }
                 
-        response = (<-this.SpotPrivatePostV1OrderOrdersBatchCancelOpenOrders(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.SpotPrivatePostV1OrderOrdersBatchCancelOpenOrders(this.Extend(request, params)))
+                    PanicOnError(response)
                 //
                 //     {
                 //         "code": 200,
@@ -6935,76 +6935,76 @@ func  (this *htx) CancelAllOrders(optionalArgs ...interface{}) <- chan interface
                     if IsTrue(IsEqual(marginMode, "isolated")) {
                         if IsTrue(trigger) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTriggerCancelall(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTriggerCancelall(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(stopLossTakeProfit) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTpslCancelall(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTpslCancelall(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(trailing) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTrackCancelall(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapTrackCancelall(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCancelall(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCancelall(this.Extend(request, params)))
+                                PanicOnError(response)
                         }
                     } else if IsTrue(IsEqual(marginMode, "cross")) {
                         if IsTrue(trigger) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTriggerCancelall(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTriggerCancelall(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(stopLossTakeProfit) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTpslCancelall(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTpslCancelall(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(trailing) {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTrackCancelall(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossTrackCancelall(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossCancelall(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossCancelall(this.Extend(request, params)))
+                                PanicOnError(response)
                         }
                     }
                 } else if IsTrue(GetValue(market, "inverse")) {
                     if IsTrue(GetValue(market, "swap")) {
                         if IsTrue(trigger) {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapTriggerCancelall(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapTriggerCancelall(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(stopLossTakeProfit) {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapTpslCancelall(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapTpslCancelall(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(trailing) {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapTrackCancelall(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapTrackCancelall(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostSwapApiV1SwapCancelall(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapCancelall(this.Extend(request, params)))
+                                PanicOnError(response)
                         }
                     } else if IsTrue(GetValue(market, "future")) {
                         if IsTrue(trigger) {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractTriggerCancelall(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractTriggerCancelall(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(stopLossTakeProfit) {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractTpslCancelall(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractTpslCancelall(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else if IsTrue(trailing) {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractTrackCancelall(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractTrackCancelall(this.Extend(request, params)))
+                                PanicOnError(response)
                         } else {
                             
-        response = (<-this.ContractPrivatePostApiV1ContractCancelall(this.Extend(request, params)))
-                            PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractCancelall(this.Extend(request, params)))
+                                PanicOnError(response)
                         }
                     }
                 } else {
@@ -7025,7 +7025,7 @@ func  (this *htx) CancelAllOrders(optionalArgs ...interface{}) <- chan interface
                 ch <- this.ParseCancelOrders(data)
                 return nil
             }
-                return nil
+        
             }()
             return ch
         }
@@ -7224,7 +7224,7 @@ func  (this *htx) FetchWithdrawAddresses(code interface{}, optionalArgs ...inter
                 var noteMatch interface{} = IsTrue((IsEqual(note, nil))) || IsTrue((IsEqual(GetValue(address, "note"), note)))
                 var networkMatch interface{} = IsTrue((IsEqual(networkCode, nil))) || IsTrue((IsEqual(GetValue(address, "network"), networkCode)))
                 if IsTrue(IsTrue(noteMatch) && IsTrue(networkMatch)) {
-                    AppendToArray(&addresses,address)
+                    AppendToArray(&addresses, address)
                 }
             }
         
@@ -7562,7 +7562,7 @@ func  (this *htx) Withdraw(code interface{}, amount interface{}, address interfa
         
                     currencies:= (<-this.FetchCurrencies())
                     PanicOnError(currencies)
-                    this.Currencies = this.DeepExtend(this.Currencies, currencies)
+                    this.Currencies = this.MapToSafeMap(this.DeepExtend(this.Currencies, currencies))
                     var targetNetwork interface{} = this.SafeValue(GetValue(currency, "networks"), networkCode, map[string]interface{} {})
                     fee = this.SafeNumber(targetNetwork, "fee")
                     if IsTrue(IsEqual(fee, nil)) {
@@ -7677,26 +7677,26 @@ func  (this *htx) Transfer(code interface{}, amount interface{}, fromAccount int
                 typeVar = this.SafeString(params, "type", typeVar)
                 AddElementToObject(request, "type", typeVar)
                 
-        response = (<-this.SpotPrivatePostV1FuturesTransfer(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.SpotPrivatePostV1FuturesTransfer(this.Extend(request, params)))
+                    PanicOnError(response)
             } else if IsTrue(IsTrue(fromSpot) && IsTrue(toCross)) {
                 
-        response = (<-this.PrivatePostCrossMarginTransferIn(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivatePostCrossMarginTransferIn(this.Extend(request, params)))
+                    PanicOnError(response)
             } else if IsTrue(IsTrue(fromCross) && IsTrue(toSpot)) {
                 
-        response = (<-this.PrivatePostCrossMarginTransferOut(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivatePostCrossMarginTransferOut(this.Extend(request, params)))
+                    PanicOnError(response)
             } else if IsTrue(IsTrue(fromSpot) && IsTrue(toIsolated)) {
                 AddElementToObject(request, "symbol", toAccountId)
                 
-        response = (<-this.PrivatePostDwTransferInMargin(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivatePostDwTransferInMargin(this.Extend(request, params)))
+                    PanicOnError(response)
             } else if IsTrue(IsTrue(fromIsolated) && IsTrue(toSpot)) {
                 AddElementToObject(request, "symbol", fromAccountId)
                 
-        response = (<-this.PrivatePostDwTransferOutMargin(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivatePostDwTransferOutMargin(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 if IsTrue(IsEqual(subType, "linear")) {
                     if IsTrue(IsTrue((IsEqual(fromAccountId, "swap"))) || IsTrue((IsEqual(fromAccount, "linear-swap")))) {
@@ -7717,8 +7717,8 @@ func  (this *htx) Transfer(code interface{}, amount interface{}, fromAccount int
                 AddElementToObject(request, "from", Ternary(IsTrue(fromSpot), "spot", fromAccountId))
                 AddElementToObject(request, "to", Ternary(IsTrue(toSpot), "spot", toAccountId))
                 
-        response = (<-this.V2PrivatePostAccountTransfer(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.V2PrivatePostAccountTransfer(this.Extend(request, params)))
+                    PanicOnError(response)
             }
         
                 //
@@ -7874,7 +7874,7 @@ func  (this *htx) FetchFundingRateHistory(optionalArgs ...interface{}) <- chan i
             params = GetValue(paginateparamsVariable,1)
             if IsTrue(paginate) {
         
-                    retRes694719 :=  (<-this.FetchPaginatedCallCursor("fetchFundingRateHistory", symbol, since, limit, params, "page_index", "current_page", 1, 50))
+                    retRes694719 :=  (<-this.FetchPaginatedCallCursor("fetchFundingRateHistory", symbol, since, limit, params, "current_page", "page_index", 1, 50))
                     PanicOnError(retRes694719)
                     ch <- retRes694719
                     return nil
@@ -7886,15 +7886,20 @@ func  (this *htx) FetchFundingRateHistory(optionalArgs ...interface{}) <- chan i
             var request interface{} = map[string]interface{} {
                 "contract_code": GetValue(market, "id"),
             }
+            if IsTrue(!IsEqual(limit, nil)) {
+                AddElementToObject(request, "page_size", limit)
+            } else {
+                AddElementToObject(request, "page_size", 50) // max
+            }
             var response interface{} = nil
             if IsTrue(GetValue(market, "inverse")) {
                 
-        response = (<-this.ContractPublicGetSwapApiV1SwapHistoricalFundingRate(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetSwapApiV1SwapHistoricalFundingRate(this.Extend(request, params)))
+                    PanicOnError(response)
             } else if IsTrue(GetValue(market, "linear")) {
                 
-        response = (<-this.ContractPublicGetLinearSwapApiV1SwapHistoricalFundingRate(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetLinearSwapApiV1SwapHistoricalFundingRate(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 panic(NotSupported(Add(this.Id, " fetchFundingRateHistory() supports inverse and linear swaps only")))
             }
@@ -7930,7 +7935,7 @@ func  (this *htx) FetchFundingRateHistory(optionalArgs ...interface{}) <- chan i
                 var marketId interface{} = this.SafeString(entry, "contract_code")
                 var symbolInner interface{} = this.SafeSymbol(marketId)
                 var timestamp interface{} = this.SafeInteger(entry, "funding_time")
-                AppendToArray(&rates,map[string]interface{} {
+                AppendToArray(&rates, map[string]interface{} {
                     "info": entry,
                     "symbol": symbolInner,
                     "fundingRate": this.SafeNumber(entry, "funding_rate"),
@@ -8021,8 +8026,8 @@ func  (this *htx) FetchFundingRate(symbol interface{}, optionalArgs ...interface
                     params := GetArg(optionalArgs, 0, map[string]interface{} {})
             _ = params
         
-            retRes70748 := (<-this.LoadMarkets())
-            PanicOnError(retRes70748)
+            retRes70798 := (<-this.LoadMarkets())
+            PanicOnError(retRes70798)
             var market interface{} = this.Market(symbol)
             var request interface{} = map[string]interface{} {
                 "contract_code": GetValue(market, "id"),
@@ -8030,12 +8035,12 @@ func  (this *htx) FetchFundingRate(symbol interface{}, optionalArgs ...interface
             var response interface{} = nil
             if IsTrue(GetValue(market, "inverse")) {
                 
-        response = (<-this.ContractPublicGetSwapApiV1SwapFundingRate(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetSwapApiV1SwapFundingRate(this.Extend(request, params)))
+                    PanicOnError(response)
             } else if IsTrue(GetValue(market, "linear")) {
                 
-        response = (<-this.ContractPublicGetLinearSwapApiV1SwapFundingRate(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetLinearSwapApiV1SwapFundingRate(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 panic(NotSupported(Add(this.Id, " fetchFundingRate() supports inverse and linear swaps only")))
             }
@@ -8082,8 +8087,8 @@ func  (this *htx) FetchFundingRates(optionalArgs ...interface{}) <- chan interfa
             params := GetArg(optionalArgs, 1, map[string]interface{} {})
             _ = params
         
-            retRes71178 := (<-this.LoadMarkets())
-            PanicOnError(retRes71178)
+            retRes71228 := (<-this.LoadMarkets())
+            PanicOnError(retRes71228)
             symbols = this.MarketSymbols(symbols)
             var defaultSubType interface{} = this.SafeString(this.Options, "defaultSubType", "linear")
             var subType interface{} = nil
@@ -8100,12 +8105,12 @@ func  (this *htx) FetchFundingRates(optionalArgs ...interface{}) <- chan interfa
             var response interface{} = nil
             if IsTrue(IsEqual(subType, "linear")) {
                 
-        response = (<-this.ContractPublicGetLinearSwapApiV1SwapBatchFundingRate(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetLinearSwapApiV1SwapBatchFundingRate(this.Extend(request, params)))
+                    PanicOnError(response)
             } else if IsTrue(IsEqual(subType, "inverse")) {
                 
-        response = (<-this.ContractPublicGetSwapApiV1SwapBatchFundingRate(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetSwapApiV1SwapBatchFundingRate(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 panic(NotSupported(Add(this.Id, " fetchFundingRates() not support this market type")))
             }
@@ -8164,8 +8169,8 @@ func  (this *htx) FetchBorrowInterest(optionalArgs ...interface{}) <- chan inter
             params := GetArg(optionalArgs, 4, map[string]interface{} {})
             _ = params
         
-            retRes71758 := (<-this.LoadMarkets())
-            PanicOnError(retRes71758)
+            retRes71808 := (<-this.LoadMarkets())
+            PanicOnError(retRes71808)
             var marginMode interface{} = nil
             marginModeparamsVariable := this.HandleMarginModeAndParams("fetchBorrowInterest", params);
             marginMode = GetValue(marginModeparamsVariable,0);
@@ -8186,16 +8191,16 @@ func  (this *htx) FetchBorrowInterest(optionalArgs ...interface{}) <- chan inter
                     AddElementToObject(request, "symbol", GetValue(market, "id"))
                 }
                 
-        response = (<-this.PrivateGetMarginLoanOrders(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivateGetMarginLoanOrders(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 if IsTrue(!IsEqual(code, nil)) {
                     var currency interface{} = this.Currency(code)
                     AddElementToObject(request, "currency", GetValue(currency, "id"))
                 }
                 
-        response = (<-this.PrivateGetCrossMarginLoanOrders(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivateGetCrossMarginLoanOrders(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             //
             //    {
@@ -8503,8 +8508,8 @@ func  (this *htx) FetchFundingHistory(optionalArgs ...interface{}) <- chan inter
             params := GetArg(optionalArgs, 3, map[string]interface{} {})
             _ = params
         
-            retRes74738 := (<-this.LoadMarkets())
-            PanicOnError(retRes74738)
+            retRes74788 := (<-this.LoadMarkets())
+            PanicOnError(retRes74788)
             var market interface{} = this.Market(symbol)
             marketTypequeryVariable := this.HandleMarketTypeAndParams("fetchFundingHistory", market, params);
             marketType := GetValue(marketTypequeryVariable,0);
@@ -8552,8 +8557,8 @@ func  (this *htx) FetchFundingHistory(optionalArgs ...interface{}) <- chan inter
                         AddElementToObject(request, "mar_acct", GetValue(market, "quoteId"))
                     }
                     
-        response = (<-this.ContractPrivatePostLinearSwapApiV3SwapFinancialRecordExact(this.Extend(request, query)))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV3SwapFinancialRecordExact(this.Extend(request, query)))
+                        PanicOnError(response)
                 } else {
                     //
                     //     {
@@ -8576,14 +8581,14 @@ func  (this *htx) FetchFundingHistory(optionalArgs ...interface{}) <- chan inter
                     //     }
                     //
                     
-        response = (<-this.ContractPrivatePostSwapApiV3SwapFinancialRecordExact(this.Extend(request, query)))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV3SwapFinancialRecordExact(this.Extend(request, query)))
+                        PanicOnError(response)
                 }
             } else {
                 AddElementToObject(request, "symbol", GetValue(market, "id"))
                 
-        response = (<-this.ContractPrivatePostApiV3ContractFinancialRecordExact(this.Extend(request, query)))
-                PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV3ContractFinancialRecordExact(this.Extend(request, query)))
+                    PanicOnError(response)
             }
             var data interface{} = this.SafeList(response, "data", []interface{}{})
         
@@ -8619,8 +8624,8 @@ func  (this *htx) SetLeverage(leverage interface{}, optionalArgs ...interface{})
                 panic(ArgumentsRequired(Add(this.Id, " setLeverage() requires a symbol argument")))
             }
         
-            retRes75658 := (<-this.LoadMarkets())
-            PanicOnError(retRes75658)
+            retRes75708 := (<-this.LoadMarkets())
+            PanicOnError(retRes75708)
             var market interface{} = this.Market(symbol)
             marketTypequeryVariable := this.HandleMarketTypeAndParams("setLeverage", market, params);
             marketType := GetValue(marketTypequeryVariable,0);
@@ -8642,24 +8647,24 @@ func  (this *htx) SetLeverage(leverage interface{}, optionalArgs ...interface{})
                 marginMode = Ternary(IsTrue((IsEqual(marginMode, nil))), "cross", marginMode)
                 if IsTrue(IsEqual(marginMode, "isolated")) {
                     
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapSwitchLeverRate(this.Extend(request, query)))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapSwitchLeverRate(this.Extend(request, query)))
+                        PanicOnError(response)
                 } else if IsTrue(IsEqual(marginMode, "cross")) {
                     
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossSwitchLeverRate(this.Extend(request, query)))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossSwitchLeverRate(this.Extend(request, query)))
+                        PanicOnError(response)
                 } else {
                     panic(NotSupported(Add(this.Id, " setLeverage() not support this market type")))
                 }
             } else {
                 if IsTrue(IsEqual(marketType, "future")) {
                     
-        response = (<-this.ContractPrivatePostApiV1ContractSwitchLeverRate(this.Extend(request, query)))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractSwitchLeverRate(this.Extend(request, query)))
+                        PanicOnError(response)
                 } else if IsTrue(IsEqual(marketType, "swap")) {
                     
-        response = (<-this.ContractPrivatePostSwapApiV1SwapSwitchLeverRate(this.Extend(request, query)))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapSwitchLeverRate(this.Extend(request, query)))
+                        PanicOnError(response)
                 } else {
                     panic(NotSupported(Add(this.Id, " setLeverage() not support this market type")))
                 }
@@ -8819,8 +8824,8 @@ func  (this *htx) FetchPositions(optionalArgs ...interface{}) <- chan interface{
             params := GetArg(optionalArgs, 1, map[string]interface{} {})
             _ = params
         
-            retRes77648 := (<-this.LoadMarkets())
-            PanicOnError(retRes77648)
+            retRes77698 := (<-this.LoadMarkets())
+            PanicOnError(retRes77698)
             symbols = this.MarketSymbols(symbols)
             var market interface{} = nil
             if IsTrue(!IsEqual(symbols, nil)) {
@@ -8849,24 +8854,24 @@ func  (this *htx) FetchPositions(optionalArgs ...interface{}) <- chan interface{
             if IsTrue(IsEqual(subType, "linear")) {
                 if IsTrue(IsEqual(marginMode, "isolated")) {
                     
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapPositionInfo(params))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapPositionInfo(params))
+                        PanicOnError(response)
                 } else if IsTrue(IsEqual(marginMode, "cross")) {
                     
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossPositionInfo(params))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossPositionInfo(params))
+                        PanicOnError(response)
                 } else {
                     panic(NotSupported(Add(this.Id, " fetchPositions() not support this market type")))
                 }
             } else {
                 if IsTrue(IsEqual(marketType, "future")) {
                     
-        response = (<-this.ContractPrivatePostApiV1ContractPositionInfo(params))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractPositionInfo(params))
+                        PanicOnError(response)
                 } else if IsTrue(IsEqual(marketType, "swap")) {
                     
-        response = (<-this.ContractPrivatePostSwapApiV1SwapPositionInfo(params))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapPositionInfo(params))
+                        PanicOnError(response)
                 } else {
                     panic(NotSupported(Add(this.Id, " fetchPositions() not support this market type")))
                 }
@@ -8877,7 +8882,7 @@ func  (this *htx) FetchPositions(optionalArgs ...interface{}) <- chan interface{
             for i := 0; IsLessThan(i, GetArrayLength(data)); i++ {
                 var position interface{} = GetValue(data, i)
                 var parsed interface{} = this.ParsePosition(position)
-                AppendToArray(&result,this.Extend(parsed, map[string]interface{} {
+                AppendToArray(&result, this.Extend(parsed, map[string]interface{} {
                     "timestamp": timestamp,
                     "datetime": this.Iso8601(timestamp),
                 }))
@@ -8909,8 +8914,8 @@ func  (this *htx) FetchPosition(symbol interface{}, optionalArgs ...interface{})
                     params := GetArg(optionalArgs, 0, map[string]interface{} {})
             _ = params
         
-            retRes79058 := (<-this.LoadMarkets())
-            PanicOnError(retRes79058)
+            retRes79108 := (<-this.LoadMarkets())
+            PanicOnError(retRes79108)
             var market interface{} = this.Market(symbol)
             var marginMode interface{} = nil
             marginModeparamsVariable := this.HandleMarginModeAndParams("fetchPosition", params);
@@ -8933,24 +8938,24 @@ func  (this *htx) FetchPosition(symbol interface{}, optionalArgs ...interface{})
             if IsTrue(GetValue(market, "linear")) {
                 if IsTrue(IsEqual(marginMode, "isolated")) {
                     
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapAccountPositionInfo(this.Extend(request, query)))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapAccountPositionInfo(this.Extend(request, query)))
+                        PanicOnError(response)
                 } else if IsTrue(IsEqual(marginMode, "cross")) {
                     
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossAccountPositionInfo(this.Extend(request, query)))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossAccountPositionInfo(this.Extend(request, query)))
+                        PanicOnError(response)
                 } else {
                     panic(NotSupported(Add(this.Id, " fetchPosition() not support this market type")))
                 }
             } else {
                 if IsTrue(IsEqual(marketType, "future")) {
                     
-        response = (<-this.ContractPrivatePostApiV1ContractAccountPositionInfo(this.Extend(request, query)))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1ContractAccountPositionInfo(this.Extend(request, query)))
+                        PanicOnError(response)
                 } else if IsTrue(IsEqual(marketType, "swap")) {
                     
-        response = (<-this.ContractPrivatePostSwapApiV1SwapAccountPositionInfo(this.Extend(request, query)))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapAccountPositionInfo(this.Extend(request, query)))
+                        PanicOnError(response)
                 } else {
                     panic(NotSupported(Add(this.Id, " setLeverage() not support this market type")))
                 }
@@ -9074,17 +9079,17 @@ func  (this *htx) FetchLedger(optionalArgs ...interface{}) <- chan interface{} {
             params := GetArg(optionalArgs, 3, map[string]interface{} {})
             _ = params
         
-            retRes82268 := (<-this.LoadMarkets())
-            PanicOnError(retRes82268)
+            retRes82318 := (<-this.LoadMarkets())
+            PanicOnError(retRes82318)
             var paginate interface{} = false
             paginateparamsVariable := this.HandleOptionAndParams(params, "fetchLedger", "paginate");
             paginate = GetValue(paginateparamsVariable,0);
             params = GetValue(paginateparamsVariable,1)
             if IsTrue(paginate) {
         
-                    retRes823019 :=  (<-this.FetchPaginatedCallDynamic("fetchLedger", code, since, limit, params, 500))
-                    PanicOnError(retRes823019)
-                    ch <- retRes823019
+                    retRes823519 :=  (<-this.FetchPaginatedCallDynamic("fetchLedger", code, since, limit, params, 500))
+                    PanicOnError(retRes823519)
+                    ch <- retRes823519
                     return nil
             }
         
@@ -9168,8 +9173,8 @@ func  (this *htx) FetchLeverageTiers(optionalArgs ...interface{}) <- chan interf
             params := GetArg(optionalArgs, 1, map[string]interface{} {})
             _ = params
         
-            retRes83018 := (<-this.LoadMarkets())
-            PanicOnError(retRes83018)
+            retRes83068 := (<-this.LoadMarkets())
+            PanicOnError(retRes83068)
         
             response:= (<-this.ContractPublicGetLinearSwapApiV1SwapAdjustfactor(params))
             PanicOnError(response)
@@ -9224,7 +9229,7 @@ func  (this *htx) ParseMarketLeverageTiers(info interface{}, optionalArgs ...int
         for k := 0; IsLessThan(k, GetArrayLength(ladders)); k++ {
             var bracket interface{} = GetValue(ladders, k)
             var adjustFactor interface{} = this.SafeString(bracket, "adjust_factor")
-            AppendToArray(&tiers,map[string]interface{} {
+            AppendToArray(&tiers, map[string]interface{} {
                 "tier": this.SafeInteger(bracket, "ladder"),
                 "symbol": this.SafeSymbol(marketId, market, nil, "swap"),
                 "currency": this.SafeCurrencyCode(currencyId),
@@ -9271,8 +9276,8 @@ func  (this *htx) FetchOpenInterestHistory(symbol interface{}, optionalArgs ...i
                 panic(BadRequest(Add(this.Id, " fetchOpenInterestHistory cannot only use the 1h, 4h, 12h and 1d timeframe")))
             }
         
-            retRes83838 := (<-this.LoadMarkets())
-            PanicOnError(retRes83838)
+            retRes83888 := (<-this.LoadMarkets())
+            PanicOnError(retRes83888)
             var timeframes interface{} = map[string]interface{} {
                 "1h": "60min",
                 "4h": "4hour",
@@ -9294,22 +9299,22 @@ func  (this *htx) FetchOpenInterestHistory(symbol interface{}, optionalArgs ...i
                 AddElementToObject(request, "symbol", GetValue(market, "baseId")) // currency code on coin-m futures
                 // coin-m futures
                 
-        response = (<-this.ContractPublicGetApiV1ContractHisOpenInterest(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetApiV1ContractHisOpenInterest(this.Extend(request, params)))
+                    PanicOnError(response)
             } else if IsTrue(GetValue(market, "linear")) {
                 AddElementToObject(request, "contract_type", "swap")
                 AddElementToObject(request, "contract_code", GetValue(market, "id"))
                 AddElementToObject(request, "contract_code", GetValue(market, "id"))
                 // USDT-M
                 
-        response = (<-this.ContractPublicGetLinearSwapApiV1SwapHisOpenInterest(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetLinearSwapApiV1SwapHisOpenInterest(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 AddElementToObject(request, "contract_code", GetValue(market, "id"))
                 // coin-m swaps
                 
-        response = (<-this.ContractPublicGetSwapApiV1SwapHisOpenInterest(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetSwapApiV1SwapHisOpenInterest(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             //
             //  contractPublicGetlinearSwapApiV1SwapHisOpenInterest
@@ -9401,8 +9406,8 @@ func  (this *htx) FetchOpenInterests(optionalArgs ...interface{}) <- chan interf
             params := GetArg(optionalArgs, 1, map[string]interface{} {})
             _ = params
         
-            retRes84938 := (<-this.LoadMarkets())
-            PanicOnError(retRes84938)
+            retRes84988 := (<-this.LoadMarkets())
+            PanicOnError(retRes84988)
             symbols = this.MarketSymbols(symbols)
             var market interface{} = nil
             if IsTrue(!IsEqual(symbols, nil)) {
@@ -9424,17 +9429,17 @@ func  (this *htx) FetchOpenInterests(optionalArgs ...interface{}) <- chan interf
             var response interface{} = nil
             if IsTrue(IsEqual(marketType, "future")) {
                 
-        response = (<-this.ContractPublicGetApiV1ContractOpenInterest(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetApiV1ContractOpenInterest(this.Extend(request, params)))
+                    PanicOnError(response)
             } else if IsTrue(IsEqual(subType, "inverse")) {
                 
-        response = (<-this.ContractPublicGetSwapApiV1SwapOpenInterest(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetSwapApiV1SwapOpenInterest(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 AddElementToObject(request, "contract_type", "swap")
                 
-        response = (<-this.ContractPublicGetLinearSwapApiV1SwapOpenInterest(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetLinearSwapApiV1SwapOpenInterest(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             var data interface{} = this.SafeList(response, "data", []interface{}{})
         
@@ -9463,8 +9468,8 @@ func  (this *htx) FetchOpenInterest(symbol interface{}, optionalArgs ...interfac
                     params := GetArg(optionalArgs, 0, map[string]interface{} {})
             _ = params
         
-            retRes85908 := (<-this.LoadMarkets())
-            PanicOnError(retRes85908)
+            retRes85958 := (<-this.LoadMarkets())
+            PanicOnError(retRes85958)
             var market interface{} = this.Market(symbol)
             if !IsTrue(GetValue(market, "contract")) {
                 panic(BadRequest(Add(this.Id, " fetchOpenInterest() supports contract markets only")))
@@ -9481,19 +9486,19 @@ func  (this *htx) FetchOpenInterest(symbol interface{}, optionalArgs ...interfac
                 AddElementToObject(request, "symbol", GetValue(market, "baseId"))
                 // COIN-M futures
                 
-        response = (<-this.ContractPublicGetApiV1ContractOpenInterest(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetApiV1ContractOpenInterest(this.Extend(request, params)))
+                    PanicOnError(response)
             } else if IsTrue(GetValue(market, "linear")) {
                 AddElementToObject(request, "contract_type", "swap")
                 // USDT-M
                 
-        response = (<-this.ContractPublicGetLinearSwapApiV1SwapOpenInterest(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetLinearSwapApiV1SwapOpenInterest(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 // COIN-M swaps
                 
-        response = (<-this.ContractPublicGetSwapApiV1SwapOpenInterest(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetSwapApiV1SwapOpenInterest(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             //
             // USDT-M contractPublicGetLinearSwapApiV1SwapOpenInterest
@@ -9658,8 +9663,8 @@ func  (this *htx) BorrowIsolatedMargin(symbol interface{}, code interface{}, amo
                     params := GetArg(optionalArgs, 0, map[string]interface{} {})
             _ = params
         
-            retRes87668 := (<-this.LoadMarkets())
-            PanicOnError(retRes87668)
+            retRes87718 := (<-this.LoadMarkets())
+            PanicOnError(retRes87718)
             var currency interface{} = this.Currency(code)
             var market interface{} = this.Market(symbol)
             var request interface{} = map[string]interface{} {
@@ -9707,8 +9712,8 @@ func  (this *htx) BorrowCrossMargin(code interface{}, amount interface{}, option
                     params := GetArg(optionalArgs, 0, map[string]interface{} {})
             _ = params
         
-            retRes88018 := (<-this.LoadMarkets())
-            PanicOnError(retRes88018)
+            retRes88068 := (<-this.LoadMarkets())
+            PanicOnError(retRes88068)
             var currency interface{} = this.Currency(code)
             var request interface{} = map[string]interface{} {
                 "currency": GetValue(currency, "id"),
@@ -9754,8 +9759,8 @@ func  (this *htx) RepayIsolatedMargin(symbol interface{}, code interface{}, amou
                     params := GetArg(optionalArgs, 0, map[string]interface{} {})
             _ = params
         
-            retRes88348 := (<-this.LoadMarkets())
-            PanicOnError(retRes88348)
+            retRes88398 := (<-this.LoadMarkets())
+            PanicOnError(retRes88398)
             var currency interface{} = this.Currency(code)
         
             accountId:= (<-this.FetchAccountIdByType("spot", "isolated", symbol, params))
@@ -9810,8 +9815,8 @@ func  (this *htx) RepayCrossMargin(code interface{}, amount interface{}, optiona
                     params := GetArg(optionalArgs, 0, map[string]interface{} {})
             _ = params
         
-            retRes88748 := (<-this.LoadMarkets())
-            PanicOnError(retRes88748)
+            retRes88798 := (<-this.LoadMarkets())
+            PanicOnError(retRes88798)
             var currency interface{} = this.Currency(code)
         
             accountId:= (<-this.FetchAccountIdByType("spot", "cross", nil, params))
@@ -9936,17 +9941,17 @@ func  (this *htx) FetchSettlementHistory(optionalArgs ...interface{}) <- chan in
             if IsTrue(GetValue(market, "swap")) {
                 if IsTrue(GetValue(market, "linear")) {
                     
-        response = (<-this.ContractPublicGetLinearSwapApiV1SwapSettlementRecords(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPublicGetLinearSwapApiV1SwapSettlementRecords(this.Extend(request, params)))
+                        PanicOnError(response)
                 } else {
                     
-        response = (<-this.ContractPublicGetSwapApiV1SwapSettlementRecords(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPublicGetSwapApiV1SwapSettlementRecords(this.Extend(request, params)))
+                        PanicOnError(response)
                 }
             } else {
                 
-        response = (<-this.ContractPublicGetApiV1ContractSettlementRecords(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetApiV1ContractSettlementRecords(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             //
             // linear swap, coin-m swap
@@ -10029,8 +10034,8 @@ func  (this *htx) FetchDepositWithdrawFees(optionalArgs ...interface{}) <- chan 
             params := GetArg(optionalArgs, 1, map[string]interface{} {})
             _ = params
         
-            retRes90528 := (<-this.LoadMarkets())
-            PanicOnError(retRes90528)
+            retRes90578 := (<-this.LoadMarkets())
+            PanicOnError(retRes90578)
         
             response:= (<-this.SpotPublicGetV2ReferenceCurrencies(params))
             PanicOnError(response)
@@ -10195,10 +10200,10 @@ func  (this *htx) ParseSettlements(settlements interface{}, market interface{}) 
             for j := 0; IsLessThan(j, GetArrayLength(list)); j++ {
                 var item interface{} = GetValue(list, j)
                 var parsedSettlement interface{} = this.ParseSettlement(item, market)
-                AppendToArray(&result,this.Extend(parsedSettlement, timestampDetails))
+                AppendToArray(&result, this.Extend(parsedSettlement, timestampDetails))
             }
         } else {
-            AppendToArray(&result,this.ParseSettlement(GetValue(settlements, i), market))
+            AppendToArray(&result, this.ParseSettlement(GetValue(settlements, i), market))
         }
     }
     return result
@@ -10264,8 +10269,8 @@ func  (this *htx) FetchLiquidations(symbol interface{}, optionalArgs ...interfac
             params := GetArg(optionalArgs, 2, map[string]interface{} {})
             _ = params
         
-            retRes92708 := (<-this.LoadMarkets())
-            PanicOnError(retRes92708)
+            retRes92758 := (<-this.LoadMarkets())
+            PanicOnError(retRes92758)
             var market interface{} = this.Market(symbol)
             var tradeType interface{} = this.SafeInteger(params, "trade_type", 0)
             var request interface{} = map[string]interface{} {
@@ -10282,18 +10287,18 @@ func  (this *htx) FetchLiquidations(symbol interface{}, optionalArgs ...interfac
                 AddElementToObject(request, "contract", GetValue(market, "id"))
                 if IsTrue(GetValue(market, "linear")) {
                     
-        response = (<-this.ContractPublicGetLinearSwapApiV3SwapLiquidationOrders(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPublicGetLinearSwapApiV3SwapLiquidationOrders(this.Extend(request, params)))
+                        PanicOnError(response)
                 } else {
                     
-        response = (<-this.ContractPublicGetSwapApiV3SwapLiquidationOrders(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPublicGetSwapApiV3SwapLiquidationOrders(this.Extend(request, params)))
+                        PanicOnError(response)
                 }
             } else if IsTrue(GetValue(market, "future")) {
                 AddElementToObject(request, "symbol", GetValue(market, "id"))
                 
-        response = (<-this.ContractPublicGetApiV3ContractLiquidationOrders(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPublicGetApiV3ContractLiquidationOrders(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 panic(NotSupported(Add(Add(Add(this.Id, " fetchLiquidations() does not support "), GetValue(market, "type")), " orders")))
             }
@@ -10355,6 +10360,7 @@ func  (this *htx) ParseLiquidation(liquidation interface{}, optionalArgs ...inte
         "contracts": this.SafeNumber(liquidation, "volume"),
         "contractSize": this.SafeNumber(market, "contractSize"),
         "price": this.SafeNumber(liquidation, "price"),
+        "side": this.SafeStringLower(liquidation, "direction"),
         "baseValue": this.SafeNumber(liquidation, "amount"),
         "quoteValue": this.SafeNumber(liquidation, "trade_turnover"),
         "timestamp": timestamp,
@@ -10390,8 +10396,8 @@ func  (this *htx) ClosePosition(symbol interface{}, optionalArgs ...interface{})
             params := GetArg(optionalArgs, 1, map[string]interface{} {})
             _ = params
         
-            retRes93738 := (<-this.LoadMarkets())
-            PanicOnError(retRes93738)
+            retRes93798 := (<-this.LoadMarkets())
+            PanicOnError(retRes93798)
             var market interface{} = this.Market(symbol)
             var clientOrderId interface{} = this.SafeString(params, "clientOrderId")
             if !IsTrue(GetValue(market, "contract")) {
@@ -10417,12 +10423,12 @@ func  (this *htx) ClosePosition(symbol interface{}, optionalArgs ...interface{})
             if IsTrue(GetValue(market, "inverse")) {
                 if IsTrue(GetValue(market, "swap")) {
                     
-        response = (<-this.ContractPrivatePostSwapApiV1SwapLightningClosePosition(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostSwapApiV1SwapLightningClosePosition(this.Extend(request, params)))
+                        PanicOnError(response)
                 } else {
                     
-        response = (<-this.ContractPrivatePostApiV1LightningClosePosition(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostApiV1LightningClosePosition(this.Extend(request, params)))
+                        PanicOnError(response)
                 }
             } else {
                 var marginMode interface{} = nil
@@ -10431,12 +10437,12 @@ func  (this *htx) ClosePosition(symbol interface{}, optionalArgs ...interface{})
                 params = GetValue(marginModeparamsVariable,1)
                 if IsTrue(IsEqual(marginMode, "cross")) {
                     
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossLightningClosePosition(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossLightningClosePosition(this.Extend(request, params)))
+                        PanicOnError(response)
                 } else {
                     
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapLightningClosePosition(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapLightningClosePosition(this.Extend(request, params)))
+                        PanicOnError(response)
                 }
             }
         
@@ -10468,8 +10474,8 @@ func  (this *htx) SetPositionMode(hedged interface{}, optionalArgs ...interface{
             params := GetArg(optionalArgs, 1, map[string]interface{} {})
             _ = params
         
-            retRes94278 := (<-this.LoadMarkets())
-            PanicOnError(retRes94278)
+            retRes94338 := (<-this.LoadMarkets())
+            PanicOnError(retRes94338)
             var posMode interface{} = Ternary(IsTrue(hedged), "dual_side", "single_side")
             var market interface{} = nil
             if IsTrue(!IsEqual(symbol, nil)) {
@@ -10492,13 +10498,13 @@ func  (this *htx) SetPositionMode(hedged interface{}, optionalArgs ...interface{
                 }
                 AddElementToObject(request, "margin_account", GetValue(market, "id"))
                 
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapSwitchPositionMode(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapSwitchPositionMode(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 AddElementToObject(request, "margin_account", "USDT")
                 
-        response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossSwitchPositionMode(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.ContractPrivatePostLinearSwapApiV1SwapCrossSwitchPositionMode(this.Extend(request, params)))
+                    PanicOnError(response)
             }
         
             ch <- response

@@ -6,6 +6,7 @@ package base
 
 var FunctionsMap = map[string]interface{}{
     "afterConstructor": TestAfterConstructor,
+    "arraysConcat": TestArraysConcat,
     "datetime": TestDatetime,
     "decimalToPrecision": TestDecimalToPrecision,
     "deepExtend": TestDeepExtend,
@@ -16,9 +17,11 @@ var FunctionsMap = map[string]interface{}{
     "json": TestJson,
     "numberToString": TestNumberToString,
     "omit": TestOmit,
+    "parsePrecision": TestParsePrecision,
     "precise": TestPrecise,
     "removeRepeatedElementsFromArray": TestRemoveRepeatedElementsFromArray,
     "safeMethods": TestSafeMethods,
+    "safeTicker": TestSafeTicker,
     "sort": TestSort,
     "sortBy": TestSortBy,
     "sum": TestSum,

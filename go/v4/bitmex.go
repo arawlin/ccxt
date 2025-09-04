@@ -8,10 +8,10 @@ type bitmex struct {
 
 }
 
-func NewBitmexCore() bitmex {
-   p := bitmex{}
-   setDefaults(&p)
-   return p
+func NewBitmexCore() *bitmex {
+    p := &bitmex{}
+    setDefaults(p)
+    return p
 }
 
 func  (this *bitmex) Describe() interface{}  {
@@ -1026,7 +1026,7 @@ func  (this *bitmex) FetchOrderBook(symbol interface{}, optionalArgs ...interfac
                 // the exchange sometimes returns null price in the orderbook
                 if IsTrue(!IsEqual(price, nil)) {
                     var resultSide interface{} = GetValue(result, side)
-                    AppendToArray(&resultSide,[]interface{}{price, amount})
+                    AppendToArray(&resultSide, []interface{}{price, amount})
                 }
             }
             AddElementToObject(result, "bids", this.SortBy(GetValue(result, "bids"), 0, true))
@@ -2251,7 +2251,7 @@ func  (this *bitmex) FetchTrades(symbol interface{}, optionalArgs ...interface{}
  * @param {float} [price] the price at which the order is to be fulfilled, in units of the quote currency, ignored in market orders
  * @param {object} [params] extra parameters specific to the exchange API endpoint
  * @param {object} [params.triggerPrice] the price at which a trigger order is triggered at
- * @param {object} [params.triggerDirection] the direction whenever the trigger happens with relation to price - 'above' or 'below'
+ * @param {object} [params.triggerDirection] the direction whenever the trigger happens with relation to price - 'ascending' or 'descending'
  * @param {float} [params.trailingAmount] the quote amount to trail away from the current market price
  * @returns {object} an [order structure]{@link https://github.com/ccxt/ccxt/wiki/Manual#order-structure}
  */
@@ -2291,7 +2291,7 @@ func  (this *bitmex) CreateOrder(symbol interface{}, typeVar interface{}, side i
             var isTrailingAmountOrder interface{} = !IsEqual(trailingAmount, nil)
             if IsTrue(IsTrue(isTriggerOrder) || IsTrue(isTrailingAmountOrder)) {
                 var triggerDirection interface{} = this.SafeString(params, "triggerDirection")
-                var triggerAbove interface{} =         (IsEqual(triggerDirection, "above"))
+                var triggerAbove interface{} =         (IsTrue((IsEqual(triggerDirection, "ascending"))) || IsTrue((IsEqual(triggerDirection, "above"))))
                 if IsTrue(IsTrue((IsEqual(typeVar, "limit"))) || IsTrue((IsEqual(typeVar, "market")))) {
                     this.CheckRequiredArgument("createOrder", triggerDirection, "triggerDirection", []interface{}{"above", "below"})
                 }
@@ -2362,7 +2362,7 @@ func  (this *bitmex) EditOrder(id interface{}, symbol interface{}, typeVar inter
             var isTrailingAmountOrder interface{} = !IsEqual(trailingAmount, nil)
             if IsTrue(isTrailingAmountOrder) {
                 var triggerDirection interface{} = this.SafeString(params, "triggerDirection")
-                var triggerAbove interface{} =         (IsEqual(triggerDirection, "above"))
+                var triggerAbove interface{} =         (IsTrue((IsEqual(triggerDirection, "ascending"))) || IsTrue((IsEqual(triggerDirection, "above"))))
                 if IsTrue(IsTrue((IsEqual(typeVar, "limit"))) || IsTrue((IsEqual(typeVar, "market")))) {
                     this.CheckRequiredArgument("createOrder", triggerDirection, "triggerDirection", []interface{}{"above", "below"})
                 }
@@ -3044,7 +3044,7 @@ func  (this *bitmex) FetchFundingRates(optionalArgs ...interface{}) <- chan inte
                 var market interface{} = this.SafeMarket(marketId)
                 var swap interface{} = this.SafeBool(market, "swap", false)
                 if IsTrue(swap) {
-                    AppendToArray(&filteredResponse,item)
+                    AppendToArray(&filteredResponse, item)
                 }
             }
             symbols = this.MarketSymbols(symbols)
@@ -3571,6 +3571,7 @@ func  (this *bitmex) ParseLiquidation(liquidation interface{}, optionalArgs ...i
         "contracts": nil,
         "contractSize": this.SafeNumber(market, "contractSize"),
         "price": this.SafeNumber(liquidation, "price"),
+        "side": this.SafeStringLower(liquidation, "side"),
         "baseValue": nil,
         "quoteValue": nil,
         "timestamp": nil,

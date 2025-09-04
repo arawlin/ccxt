@@ -8,10 +8,10 @@ type deribit struct {
 
 }
 
-func NewDeribitCore() deribit {
-   p := deribit{}
-   setDefaults(&p)
-   return p
+func NewDeribitCore() *deribit {
+    p := &deribit{}
+    setDefaults(p)
+    return p
 }
 
 func  (this *deribit) Describe() interface{}  {
@@ -848,7 +848,7 @@ func  (this *deribit) FetchMarkets(optionalArgs ...interface{}) <- chan interfac
         
                 instrumentsResponse:= (<-this.PublicGetGetInstruments(params))
                 PanicOnError(instrumentsResponse)
-                AppendToArray(&instrumentsResponses,instrumentsResponse)
+                AppendToArray(&instrumentsResponses, instrumentsResponse)
             } else {
         
                 currenciesResponse:= (<-this.PublicGetGetCurrencies(params))
@@ -959,7 +959,7 @@ func  (this *deribit) FetchMarkets(optionalArgs ...interface{}) <- chan interfac
                     //         "testnet":false
                     //     }
                     //
-                    AppendToArray(&instrumentsResponses,instrumentsResponse)
+                    AppendToArray(&instrumentsResponses, instrumentsResponse)
                 }
             }
             for i := 0; IsLessThan(i, GetArrayLength(instrumentsResponses)); i++ {
@@ -1017,7 +1017,7 @@ func  (this *deribit) FetchMarkets(optionalArgs ...interface{}) <- chan interfac
                     AddElementToObject(parsedMarkets, symbol, true)
                     var minTradeAmount interface{} = this.SafeNumber(market, "min_trade_amount")
                     var tickSize interface{} = this.SafeNumber(market, "tick_size")
-                    AppendToArray(&result,map[string]interface{} {
+                    AppendToArray(&result, map[string]interface{} {
                         "id": id,
                         "symbol": symbol,
                         "base": base,
@@ -1128,12 +1128,12 @@ func  (this *deribit) FetchBalance(optionalArgs ...interface{}) <- chan interfac
             var response interface{} = nil
             if IsTrue(IsEqual(code, nil)) {
                 
-        response = (<-this.PrivateGetGetAccountSummaries(params))
-                PanicOnError(response)
+            response = (<-this.PrivateGetGetAccountSummaries(params))
+                    PanicOnError(response)
             } else {
                 
-        response = (<-this.PrivateGetGetAccountSummary(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivateGetGetAccountSummary(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             //
             //     {
@@ -1780,12 +1780,12 @@ func  (this *deribit) FetchTrades(symbol interface{}, optionalArgs ...interface{
             var response interface{} = nil
             if IsTrue(IsTrue((IsEqual(since, nil))) && !IsTrue((InOp(request, "end_timestamp")))) {
                 
-        response = (<-this.PublicGetGetLastTradesByInstrument(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PublicGetGetLastTradesByInstrument(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 
-        response = (<-this.PublicGetGetLastTradesByInstrumentAndTime(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PublicGetGetLastTradesByInstrumentAndTime(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             //
             //      {
@@ -2340,12 +2340,12 @@ func  (this *deribit) CreateOrder(symbol interface{}, typeVar interface{}, side 
             var response interface{} = nil
             if IsTrue(IsEqual(this.Capitalize(side), "Buy")) {
                 
-        response = (<-this.PrivateGetBuy(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivateGetBuy(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 
-        response = (<-this.PrivateGetSell(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivateGetSell(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             //
             //     {
@@ -2531,14 +2531,14 @@ func  (this *deribit) CancelAllOrders(optionalArgs ...interface{}) <- chan inter
             var response interface{} = nil
             if IsTrue(IsEqual(symbol, nil)) {
                 
-        response = (<-this.PrivateGetCancelAll(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivateGetCancelAll(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 var market interface{} = this.Market(symbol)
                 AddElementToObject(request, "instrument_name", GetValue(market, "id"))
                 
-        response = (<-this.PrivateGetCancelAllByInstrument(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivateGetCancelAllByInstrument(this.Extend(request, params)))
+                    PanicOnError(response)
             }
         
                 //
@@ -2595,14 +2595,14 @@ func  (this *deribit) FetchOpenOrders(optionalArgs ...interface{}) <- chan inter
                 var currency interface{} = this.Currency(code)
                 AddElementToObject(request, "currency", GetValue(currency, "id"))
                 
-        response = (<-this.PrivateGetGetOpenOrdersByCurrency(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivateGetGetOpenOrdersByCurrency(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 market = this.Market(symbol)
                 AddElementToObject(request, "instrument_name", GetValue(market, "id"))
                 
-        response = (<-this.PrivateGetGetOpenOrdersByInstrument(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivateGetGetOpenOrdersByInstrument(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             var result interface{} = this.SafeList(response, "result", []interface{}{})
         
@@ -2648,14 +2648,14 @@ func  (this *deribit) FetchClosedOrders(optionalArgs ...interface{}) <- chan int
                 var currency interface{} = this.Currency(code)
                 AddElementToObject(request, "currency", GetValue(currency, "id"))
                 
-        response = (<-this.PrivateGetGetOrderHistoryByCurrency(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivateGetGetOrderHistoryByCurrency(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 market = this.Market(symbol)
                 AddElementToObject(request, "instrument_name", GetValue(market, "id"))
                 
-        response = (<-this.PrivateGetGetOrderHistoryByInstrument(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivateGetGetOrderHistoryByInstrument(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             var result interface{} = this.SafeList(response, "result", []interface{}{})
         
@@ -2784,26 +2784,26 @@ func  (this *deribit) FetchMyTrades(optionalArgs ...interface{}) <- chan interfa
                 AddElementToObject(request, "currency", GetValue(currency, "id"))
                 if IsTrue(IsEqual(since, nil)) {
                     
-        response = (<-this.PrivateGetGetUserTradesByCurrency(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.PrivateGetGetUserTradesByCurrency(this.Extend(request, params)))
+                        PanicOnError(response)
                 } else {
                     AddElementToObject(request, "start_timestamp", since)
                     
-        response = (<-this.PrivateGetGetUserTradesByCurrencyAndTime(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.PrivateGetGetUserTradesByCurrencyAndTime(this.Extend(request, params)))
+                        PanicOnError(response)
                 }
             } else {
                 market = this.Market(symbol)
                 AddElementToObject(request, "instrument_name", GetValue(market, "id"))
                 if IsTrue(IsEqual(since, nil)) {
                     
-        response = (<-this.PrivateGetGetUserTradesByInstrument(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.PrivateGetGetUserTradesByInstrument(this.Extend(request, params)))
+                        PanicOnError(response)
                 } else {
                     AddElementToObject(request, "start_timestamp", since)
                     
-        response = (<-this.PrivateGetGetUserTradesByInstrumentAndTime(this.Extend(request, params)))
-                    PanicOnError(response)
+            response = (<-this.PrivateGetGetUserTradesByInstrumentAndTime(this.Extend(request, params)))
+                        PanicOnError(response)
                 }
             }
             //
@@ -3104,21 +3104,21 @@ func  (this *deribit) ParsePosition(position interface{}, optionalArgs ...interf
     var unrealizedPnl interface{} = this.SafeString(position, "floating_profit_loss")
     var initialMarginString interface{} = this.SafeString(position, "initial_margin")
     var notionalString interface{} = this.SafeString(position, "size_currency")
+    var notionalStringAbs interface{} = Precise.StringAbs(notionalString)
     var maintenanceMarginString interface{} = this.SafeString(position, "maintenance_margin")
-    var currentTime interface{} = this.Milliseconds()
     return this.SafePosition(map[string]interface{} {
         "info": position,
         "id": nil,
         "symbol": this.SafeString(market, "symbol"),
-        "timestamp": currentTime,
-        "datetime": this.Iso8601(currentTime),
+        "timestamp": nil,
+        "datetime": nil,
         "lastUpdateTimestamp": nil,
         "initialMargin": this.ParseNumber(initialMarginString),
-        "initialMarginPercentage": this.ParseNumber(Precise.StringMul(Precise.StringDiv(initialMarginString, notionalString), "100")),
+        "initialMarginPercentage": this.ParseNumber(Precise.StringMul(Precise.StringDiv(initialMarginString, notionalStringAbs), "100")),
         "maintenanceMargin": this.ParseNumber(maintenanceMarginString),
-        "maintenanceMarginPercentage": this.ParseNumber(Precise.StringMul(Precise.StringDiv(maintenanceMarginString, notionalString), "100")),
+        "maintenanceMarginPercentage": this.ParseNumber(Precise.StringMul(Precise.StringDiv(maintenanceMarginString, notionalStringAbs), "100")),
         "entryPrice": this.SafeNumber(position, "average_price"),
-        "notional": this.ParseNumber(notionalString),
+        "notional": this.ParseNumber(notionalStringAbs),
         "leverage": this.SafeInteger(position, "leverage"),
         "unrealizedPnl": this.ParseNumber(unrealizedPnl),
         "contracts": nil,
@@ -3334,7 +3334,7 @@ func  (this *deribit) ParseVolatilityHistory(volatility interface{}) interface{}
     for i := 0; IsLessThan(i, GetArrayLength(volatilityResult)); i++ {
         var timestamp interface{} = this.SafeInteger(GetValue(volatilityResult, i), 0)
         var volatilityObj interface{} = this.SafeNumber(GetValue(volatilityResult, i), 1)
-        AppendToArray(&result,map[string]interface{} {
+        AppendToArray(&result, map[string]interface{} {
             "info": volatilityObj,
             "timestamp": timestamp,
             "datetime": this.Iso8601(timestamp),
@@ -3463,12 +3463,12 @@ func  (this *deribit) Transfer(code interface{}, amount interface{}, fromAccount
             var response interface{} = nil
             if IsTrue(IsEqual(method, "privateGetSubmitTransferToUser")) {
                 
-        response = (<-this.PrivateGetSubmitTransferToUser(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivateGetSubmitTransferToUser(this.Extend(request, params)))
+                    PanicOnError(response)
             } else {
                 
-        response = (<-this.PrivateGetSubmitTransferToSubaccount(this.Extend(request, params)))
-                PanicOnError(response)
+            response = (<-this.PrivateGetSubmitTransferToSubaccount(this.Extend(request, params)))
+                    PanicOnError(response)
             }
             //
             //     {
@@ -3807,7 +3807,7 @@ func  (this *deribit) FetchFundingRateHistory(optionalArgs ...interface{}) <- ch
             for i := 0; IsLessThan(i, GetArrayLength(result)); i++ {
                 var fr interface{} = GetValue(result, i)
                 var rate interface{} = this.ParseFundingRate(fr, market)
-                AppendToArray(&rates,rate)
+                AppendToArray(&rates, rate)
             }
         
             ch <- this.FilterBySymbolSinceLimit(rates, symbol, since, limit)
